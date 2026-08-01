@@ -1,0 +1,89 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============ MODELO DE USUARIOS (CLIENTES) ============
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String   // En producción, hasheado con bcrypt
+  name          String
+  phone         String
+  role          String   @default("client") // 'client' o 'admin'
+  createdAt     DateTime @default(now())
+  
+  // Relación con pedidos
+  orders        Order[]  @relation("UserOrders")
+}
+
+// ============ MODELO DE CONDUCTORES ============
+model Driver {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String   // Hasheado
+  name            String
+  phone           String
+  
+  // Información del vehículo
+  vehicleType     String   // "moto", "auto", "furgoneta"
+  vehiclePlate    String   @unique
+  vehicleBrand    String   // Ej: "Honda", "Toyota"
+  vehicleModel    String   // Ej: "CB 150", "Yaris"
+  vehicleYear     Int      // Ej: 2020
+  
+  // Documentación (URLs de archivos subidos)
+  driverLicense   String?  // URL de la licencia
+  vehicleSOAT     String?  // URL del SOAT
+  criminalRecord  String?  // URL de antecedentes penales
+  
+  // Estado
+  isOnline        Boolean  @default(false)
+  isVerified      Boolean  @default(false) // Admin verifica documentos
+  rating          Float    @default(5.0)
+  
+  createdAt       DateTime @default(now())
+  
+  // Relación con pedidos
+  orders          Order[]  @relation("DriverOrders")
+}
+
+// ============ MODELO DE PEDIDOS ============
+model Order {
+  id              String   @id @default(uuid())
+  
+  // Información del cliente
+  userId          String?
+  user            User?    @relation("UserOrders", fields: [userId], references: [id])
+  customerName    String   // Fallback si no hay user
+  
+  // Ubicaciones
+  originAddress   String
+  originLat       Float
+  originLng       Float
+  destAddress     String
+  destLat         Float
+  destLng         Float
+  
+  // Detalles del pedido
+  packageSize     String
+  urgency         Boolean  @default(false)
+  price           Float
+  paymentMethod   String?  @default("Efectivo")
+  
+  // Estado y asignación
+  status          String   @default("PENDIENTE") // PENDIENTE, ASIGNADO, EN_CAMINO, ENTREGADO, CANCELADO
+  driverId        String?
+  driver          Driver?  @relation("DriverOrders", fields: [driverId], references: [id])
+  
+  // Evidencia
+  proofImage      String?
+  
+  // Fechas
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
