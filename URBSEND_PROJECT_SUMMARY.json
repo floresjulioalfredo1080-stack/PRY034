@@ -1,0 +1,440 @@
+{
+  "proyecto": {
+    "nombre": "URBSEND",
+    "descripcion": "Plataforma de mensajería y delivery express para Arequipa, Perú",
+    "version": "1.0.0 MVP",
+    "fecha_inicio": "2025-01-30",
+    "fecha_finalizacion": "2025-02-05",
+    "estado": "Completado",
+    "repositorio": "https://github.com/usuario/urbsend-project",
+    "autor": "Carlos Alberto LLano Flores"
+  },
+
+  "tecnologias": {
+    "backend": {
+      "runtime": "Node.js",
+      "framework": "Express.js 5.x",
+      "orm": "Prisma ORM",
+      "base_datos": "PostgreSQL (Docker)",
+      "autenticacion": "bcrypt (hash de contraseñas)",
+      "subida_archivos": "Multer",
+      "pdf": "PDFKit",
+      "email": "Nodemailer",
+      "puerto": 3001
+    },
+    "frontend": {
+      "framework": "React 19",
+      "build_tool": "Vite",
+      "routing": "React Router DOM v7",
+      "mapas": "MapLibre GL JS",
+      "iconos": "Lucide React",
+      "estilos": "CSS puro (responsive, mobile-first)",
+      "puerto": 5173
+    },
+    "mobile_app": {
+      "framework": "Flutter",
+      "lenguaje": "Dart",
+      "dependencias": ["http", "url_launcher", "image_picker", "http_parser"],
+      "plataforma": "Android"
+    },
+    "infraestructura": {
+      "contenedores": "Docker",
+      "routing": "OSRM (Open Source Routing Machine)",
+      "mapas_tiles": "OpenStreetMap / MapTiler"
+    }
+  },
+
+  "arquitectura": {
+    "tipo": "Monorepo (backend + frontend + mobile)",
+    "estructura_carpetas": {
+      "raiz": "urbsend-project/",
+      "backend": "backend/",
+      "frontend": "frontend/",
+      "mobile": "urbsend_apps/ (separado en AndroidStudioProjects)"
+    },
+    "patron": "MVC simplificado",
+    "comunicacion": "REST API"
+  },
+
+  "base_de_datos": {
+    "proveedor": "PostgreSQL 15",
+    "contenedor_docker": "urbsend_postgres",
+    "modelos": {
+      "User": {
+        "descripcion": "Clientes de la plataforma",
+        "campos": ["id (UUID)", "email (unique)", "password (hashed)", "name", "phone", "role", "createdAt"],
+        "relaciones": ["orders (1:N)"]
+      },
+      "Driver": {
+        "descripcion": "Conductores/Repartidores",
+        "campos": ["id (UUID)", "email (unique)", "password (hashed)", "name", "phone", "vehicleType", "vehiclePlate (unique)", "vehicleBrand", "vehicleModel", "vehicleYear", "driverLicense", "vehicleSOAT", "criminalRecord", "isOnline", "isVerified", "rating", "createdAt"],
+        "relaciones": ["orders (1:N)"]
+      },
+      "Order": {
+        "descripcion": "Pedidos de envío",
+        "campos": ["id (UUID)", "userId", "customerName", "originAddress", "originLat", "originLng", "destAddress", "destLat", "destLng", "packageSize", "urgency", "price", "paymentMethod", "status", "driverId", "proofImage", "createdAt", "updatedAt"],
+        "estados": ["PENDIENTE", "ASIGNADO", "EN_CAMINO", "ENTREGADO", "CANCELADO"],
+        "relaciones": ["user (N:1)", "driver (N:1)"]
+      }
+    }
+  },
+
+  "api_endpoints": {
+    "autenticacion": [
+      {"metodo": "POST", "ruta": "/api/register/client", "descripcion": "Registro de cliente"},
+      {"metodo": "POST", "ruta": "/api/register/driver", "descripcion": "Registro de conductor con documentos"},
+      {"metodo": "POST", "ruta": "/api/login/client", "descripcion": "Login de cliente"},
+      {"metodo": "POST", "ruta": "/api/login/driver", "descripcion": "Login de conductor"}
+    ],
+    "pedidos": [
+      {"metodo": "GET", "ruta": "/api/orders", "descripcion": "Listar todos los pedidos"},
+      {"metodo": "GET", "ruta": "/api/orders/:id", "descripcion": "Obtener pedido por ID"},
+      {"metodo": "POST", "ruta": "/api/orders", "descripcion": "Crear nuevo pedido"},
+      {"metodo": "PATCH", "ruta": "/api/orders/:id/status", "descripcion": "Actualizar estado (con foto opcional)"}
+    ],
+    "usuarios": [
+      {"metodo": "GET", "ruta": "/api/users/:userId/orders", "descripcion": "Historial de pedidos del cliente"},
+      {"metodo": "GET", "ruta": "/api/drivers/:driverId/orders", "descripcion": "Pedidos entregados por conductor"}
+    ],
+    "admin": [
+      {"metodo": "GET", "ruta": "/api/admin/drivers/pending", "descripcion": "Conductores pendientes de verificación"},
+      {"metodo": "PATCH", "ruta": "/api/admin/drivers/:id/verify", "descripcion": "Aprobar/rechazar conductor"},
+      {"metodo": "GET", "ruta": "/api/drivers", "descripcion": "Listar conductores verificados"}
+    ],
+    "notificaciones": [
+      {"metodo": "GET", "ruta": "/api/orders/:id/whatsapp", "descripcion": "Generar URL de WhatsApp"},
+      {"metodo": "POST", "ruta": "/api/orders/:id/notify", "descripcion": "Enviar notificación manual"}
+    ],
+    "facturacion": [
+      {"metodo": "GET", "ruta": "/api/orders/:id/invoice?type=boleta|factura", "descripcion": "Descargar comprobante PDF"}
+    ],
+    "utilidades": [
+      {"metodo": "GET", "ruta": "/api/seed-drivers", "descripcion": "Crear conductores de prueba"}
+    ]
+  },
+
+  "funcionalidades": {
+    "cliente": {
+      "web": [
+        "Registro e inicio de sesión",
+        "Cotización de envíos en tiempo real",
+        "Selección de origen/destino en mapa interactivo",
+        "Búsqueda de direcciones (geocoding)",
+        "Selección de tamaño de paquete",
+        "Modo Normal vs Express (+50%)",
+        "Métodos de pago: Efectivo, Yape, Tarjeta",
+        "Rastreo en tiempo real con animación GPS",
+        "Historial de pedidos",
+        "Descarga de comprobantes PDF",
+        "Compartir estado por WhatsApp"
+      ],
+      "mobile": [
+        "Login de cliente",
+        "Crear pedidos simplificados",
+        "Ver historial"
+      ]
+    },
+    "conductor": {
+      "web": [
+        "Panel de pedidos disponibles",
+        "Aceptar pedidos",
+        "Iniciar ruta",
+        "Visualizar ruta en mapa",
+        "Subir foto de entrega",
+        "Contactar cliente por WhatsApp",
+        "Ver ganancias y estadísticas"
+      ],
+      "mobile": [
+        "Login de conductor",
+        "Ver lista de pedidos disponibles",
+        "Aceptar pedidos",
+        "Abrir ruta en Google Maps",
+        "Cambiar estado: Recogido → En ruta → Entregado",
+        "Tomar y subir foto de entrega con cámara"
+      ]
+    },
+    "administrador": {
+      "web": [
+        "Dashboard de analytics",
+        "Métricas: pedidos totales, entregados, en proceso",
+        "Gráfico de distribución por estado",
+        "Gestión de conductores",
+        "Verificar/rechazar conductores nuevos",
+        "Ver documentos subidos (licencia, SOAT, antecedentes)"
+      ]
+    },
+    "sistema": [
+      "Cálculo de precios basado en distancia y tamaño",
+      "Rutas reales con OSRM",
+      "Animación de seguimiento GPS",
+      "Notificaciones por Email (Nodemailer)",
+      "Notificaciones por WhatsApp (URL API)",
+      "Generación de comprobantes PDF",
+      "Subida de evidencia de entrega",
+      "Sistema de toasts personalizados"
+    ]
+  },
+
+  "precios": {
+    "tarifa_base": 5.00,
+    "por_km": 1.50,
+    "multiplicadores_tamaño": {
+      "pequeño": 1.0,
+      "mediano": 1.2,
+      "grande": 1.5
+    },
+    "multiplicador_express": 1.5,
+    "formula": "precio = (base + (distancia_km * por_km)) * multiplicador_tamaño * (urgency ? 1.5 : 1)",
+    "moneda": "PEN (Soles)"
+  },
+
+  "frontend_vistas": {
+    "publicas": [
+      {"nombre": "LandingView", "ruta": "/", "descripcion": "Página de inicio corporativa"},
+      {"nombre": "LoginView", "ruta": "/login", "descripcion": "Inicio de sesión"},
+      {"nombre": "RegisterView", "ruta": "/register", "descripcion": "Registro de usuarios"},
+      {"nombre": "AboutView", "ruta": "/about", "descripcion": "Sobre nosotros"},
+      {"nombre": "HelpView", "ruta": "/help", "descripcion": "Ayuda y FAQ"},
+      {"nombre": "TrackingView", "ruta": "/tracking", "descripcion": "Rastreo público de pedidos"}
+    ],
+    "cliente": [
+      {"nombre": "ClientView", "ruta": "/client", "descripcion": "Crear nuevo envío"},
+      {"nombre": "ClientHistoryView", "ruta": "/client/history", "descripcion": "Historial de pedidos"}
+    ],
+    "conductor": [
+      {"nombre": "DriverView", "ruta": "/driver", "descripcion": "Panel de conductor"},
+      {"nombre": "DriverEarningsView", "ruta": "/driver/earnings", "descripcion": "Ganancias del conductor"}
+    ],
+    "admin": [
+      {"nombre": "AdminView", "ruta": "/admin", "descripcion": "Panel principal de admin"},
+      {"nombre": "AdminAnalyticsView", "ruta": "/admin/analytics", "descripcion": "Estadísticas"},
+      {"nombre": "AdminDriversView", "ruta": "/admin/drivers", "descripcion": "Gestión de conductores"}
+    ]
+  },
+
+  "componentes_react": [
+    {"nombre": "Navbar", "descripcion": "Navegación principal responsive con menú móvil"},
+    {"nombre": "Footer", "descripcion": "Pie de página con links y redes sociales"},
+    {"nombre": "Toast", "descripcion": "Sistema de notificaciones toast (success, error, warning, info)"},
+    {"nombre": "ToastProvider", "descripcion": "Context provider para toasts globales"},
+    {"nombre": "ConfirmDialog", "descripcion": "Diálogo de confirmación personalizado"}
+  ],
+
+  "mobile_app_flutter": {
+    "nombre": "urbsend_apps",
+    "ruta": "C:/Users/car_g/AndroidStudioProjects/urbsend_apps",
+    "archivos": {
+      "main.dart": "Punto de entrada de la aplicación",
+      "login_screen.dart": "Pantalla de login con toggle Cliente/Repartidor",
+      "client_home.dart": "Pantalla principal del cliente",
+      "driver_home.dart": "Pantalla principal del repartidor",
+      "api_service.dart": "Servicio de conexión con el backend"
+    },
+    "funcionalidades_conductor": [
+      "Ver pedidos disponibles y asignados",
+      "Aceptar pedidos pendientes",
+      "Iniciar ruta (cambio de estado)",
+      "Abrir Google Maps con ruta origen→destino",
+      "Tomar foto de entrega con cámara",
+      "Subir evidencia y marcar como entregado",
+      "Pull-to-refresh para actualizar lista"
+    ],
+    "permisos_android": [
+      "INTERNET",
+      "CAMERA",
+      "READ_EXTERNAL_STORAGE",
+      "WRITE_EXTERNAL_STORAGE"
+    ],
+    "configuracion_red": {
+      "emulador": "http://10.0.2.2:3001/api",
+      "dispositivo_real": "http://192.168.x.x:3001/api (cambiar IP)"
+    }
+  },
+
+  "estilos_ui": {
+    "colores": {
+      "primario": "#D71920 (Rojo URBSEND)",
+      "secundario": "#2C3E50 (Azul oscuro)",
+      "exito": "#16a34a (Verde)",
+      "alerta": "#f59e0b (Naranja)",
+      "info": "#3b82f6 (Azul)",
+      "peligro": "#dc2626 (Rojo)",
+      "whatsapp": "#25D366 (Verde WhatsApp)",
+      "fondo": "#f8f9fa (Gris claro)"
+    },
+    "tipografia": {
+      "familia": "Inter, system-ui, sans-serif",
+      "tamaños": "clamp() para responsive"
+    },
+    "responsive": {
+      "breakpoints": {
+        "mobile": "max-width: 480px",
+        "tablet": "max-width: 768px",
+        "desktop": "min-width: 769px"
+      },
+      "estrategia": "Mobile-first con CSS Grid y Flexbox"
+    }
+  },
+
+  "seguridad": {
+    "contraseñas": "Hash con bcrypt (salt rounds: 10)",
+    "autenticacion": "Basada en localStorage (MVP)",
+    "admin_credenciales": {
+      "email": "admin",
+      "password": "admin123"
+    },
+    "cors": "Habilitado para desarrollo",
+    "uploads": "Validación de tipo de archivo con Multer"
+  },
+
+  "datos_prueba": {
+    "conductores_seed": [
+      {"nombre": "Juan Pérez", "email": "juan@urbsend.com", "password": "moto123", "vehiculo": "Honda CB 150"},
+      {"nombre": "Maria López", "email": "maria@urbsend.com", "password": "moto123", "vehiculo": "Toyota Yaris"},
+      {"nombre": "Pedro Castillo", "email": "pedro@urbsend.com", "password": "moto123", "vehiculo": "Yamaha FZ 150"}
+    ],
+    "endpoint_seed": "GET /api/seed-drivers"
+  },
+
+  "commits_git": [
+    {
+      "hash": "bc88a81",
+      "mensaje": "feat: implement responsive UI, PDF invoices, custom toasts, urgency pricing, notifications and driver mobile app",
+      "descripcion": "Versión final con todas las funcionalidades"
+    },
+    {
+      "hash": "844153a",
+      "mensaje": "Complete refactoring: Modular architecture, new corporate UI design and landing page",
+      "descripcion": "Refactorización y nuevo diseño"
+    },
+    {
+      "hash": "8bdbe10",
+      "mensaje": "Final feat: Complete MVP for Urbsend",
+      "descripcion": "MVP completo con 4 vistas"
+    },
+    {
+      "hash": "947804a",
+      "mensaje": "Feature (MVP): Implementation of complete logistics and evidence flow",
+      "descripcion": "Flujo de logística y evidencias"
+    },
+    {
+      "hash": "5abcc72",
+      "mensaje": "Fix: Correct map visibility and synchronize control panel",
+      "descripcion": "Correcciones de mapa"
+    },
+    {
+      "hash": "90a418d",
+      "mensaje": "feat: complete infrastructure setup, docker-db migrations, core pricing logic and interactive map integration",
+      "descripcion": "Setup inicial de infraestructura"
+    }
+  ],
+
+  "archivos_principales": {
+    "backend": {
+      "index.js": {
+        "lineas": 993,
+        "descripcion": "Servidor Express con todos los endpoints, configuración de notificaciones, templates de email/WhatsApp"
+      },
+      "priceCalculator.js": {
+        "lineas": 25,
+        "descripcion": "Lógica de cálculo de precios"
+      },
+      "prisma/schema.prisma": {
+        "lineas": 90,
+        "descripcion": "Esquema de base de datos"
+      }
+    },
+    "frontend": {
+      "src/App.jsx": {
+        "lineas": 512,
+        "descripcion": "Componente principal con routing, estado global, lógica de mapa"
+      },
+      "src/index.css": {
+        "lineas": 713,
+        "descripcion": "Estilos globales responsive"
+      },
+      "src/views/": {
+        "total_archivos": 13,
+        "descripcion": "Vistas de la aplicación"
+      },
+      "src/components/": {
+        "total_archivos": 3,
+        "descripcion": "Navbar, Footer, Toast"
+      }
+    },
+    "mobile": {
+      "lib/main.dart": "Punto de entrada",
+      "lib/login_screen.dart": "Login con toggle Cliente/Repartidor",
+      "lib/client_home.dart": "Home del cliente",
+      "lib/driver_home.dart": "Home del repartidor con todas las funcionalidades",
+      "lib/api_service.dart": "Servicio API completo",
+      "pubspec.yaml": "Dependencias Flutter",
+      "android/app/src/main/AndroidManifest.xml": "Permisos Android"
+    }
+  },
+
+  "comandos_ejecucion": {
+    "backend": {
+      "directorio": "cd backend",
+      "instalar": "npm install",
+      "migraciones": "npx prisma migrate dev",
+      "ejecutar": "node index.js",
+      "seed": "curl http://localhost:3001/api/seed-drivers"
+    },
+    "frontend": {
+      "directorio": "cd frontend",
+      "instalar": "npm install",
+      "ejecutar": "npm run dev"
+    },
+    "mobile": {
+      "directorio": "cd urbsend_apps",
+      "dependencias": "flutter pub get",
+      "ejecutar": "flutter run"
+    },
+    "docker_postgres": {
+      "crear": "docker run --name urbsend_postgres -e POSTGRES_USER=urbsend -e POSTGRES_PASSWORD=urbsend123 -e POSTGRES_DB=urbsend_db -p 5432:5432 -d postgres:15",
+      "iniciar": "docker start urbsend_postgres"
+    }
+  },
+
+  "variables_entorno": {
+    "backend/.env": {
+      "DATABASE_URL": "postgresql://urbsend:urbsend123@localhost:5432/urbsend_db",
+      "EMAIL_USER": "(opcional) email para notificaciones",
+      "EMAIL_PASS": "(opcional) app password de Gmail"
+    }
+  },
+
+  "proximos_pasos_produccion": [
+    "Implementar JWT para autenticación segura",
+    "Agregar validación de datos con Joi/Zod",
+    "Configurar HTTPS con certificado SSL",
+    "Desplegar backend en Railway/Render/AWS",
+    "Desplegar frontend en Vercel/Netlify",
+    "Configurar dominio personalizado",
+    "Publicar app en Google Play Store",
+    "Implementar pasarela de pago real (Culqi/MercadoPago)",
+    "Agregar sistema de ratings y reviews",
+    "Implementar websockets para tiempo real",
+    "Agregar pruebas unitarias y E2E"
+  ],
+
+  "metricas_proyecto": {
+    "total_archivos_codigo": {
+      "backend": 3,
+      "frontend": 16,
+      "mobile": 5
+    },
+    "lineas_codigo_aproximadas": {
+      "backend": 1100,
+      "frontend": 4500,
+      "mobile": 800,
+      "total": 6400
+    },
+    "endpoints_api": 15,
+    "vistas_web": 13,
+    "pantallas_mobile": 3,
+    "modelos_db": 3,
+    "dias_desarrollo": 6
+  }
+}

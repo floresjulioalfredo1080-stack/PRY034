@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+build/
+**/build/
+.dart_tool/
+**/.dart_tool/
+
+# Environment
+.env
+**/.env
+
+# Database binaries
+*.db
+*.db-journal
+backend/prisma/dev.db
+
+# Logs & temp
+*.log
+scratch/
+
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

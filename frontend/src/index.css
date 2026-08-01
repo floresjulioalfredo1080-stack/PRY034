@@ -1,0 +1,713 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  --primary-color: #D71920;
+  --primary-hover: #b3151b;
+  --secondary-color: #2C3E50;
+  --bg-light: #F8F9FA;
+  --bg-white: #FFFFFF;
+  --text-dark: #222222;
+  --text-gray: #666666;
+  --border-color: #E5E7EB;
+  --radius: 16px;
+  --nav-height: 64px;
+}
+
+/* ========== RESET & BASE ========== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- LAYOUT PRINCIPAL --- */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.main-content-area {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - var(--nav-height));
+  position: relative;
+}
+
+/* --- NAVBAR ESTILOS --- */
+.navbar {
+  height: var(--nav-height);
+  background: white;
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 20px;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--secondary-color);
+  letter-spacing: -0.5px;
+}
+
+/* Links Desktop */
+.desktop-links {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--secondary-color);
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.nav-link:hover {
+  background-color: var(--bg-light);
+}
+
+.nav-link.active {
+  background-color: #FFF0F0;
+  color: var(--primary-color);
+}
+
+/* Botón Móvil */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  padding: 4px;
+  cursor: pointer;
+  border: none;
+}
+
+/* Menú Desplegable */
+.mobile-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  flex-direction: column;
+  padding: 10px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  border-bottom: 1px solid var(--border-color);
+  display: none;
+  transform: translateY(-20px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.mobile-dropdown.open {
+  display: flex;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* --- PANELES Y MAPA --- */
+.sidebar-container {
+  width: 420px;
+  min-width: 420px;
+  height: 100%;
+  background: var(--bg-white);
+  border-right: 1px solid var(--border-color);
+  z-index: 10;
+  box-shadow: 4px 0 20px rgba(0,0,0,0.03);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-panel {
+  flex: 1;
+  padding: 24px;
+}
+
+.map-wrapper {
+  flex: 1;
+  position: relative;
+  margin: 16px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+  min-height: 400px;
+}
+
+/* PÁGINAS SIN MAPA */
+.full-width-content {
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  border: none !important;
+  box-shadow: none !important;
+  height: auto !important;
+  overflow-y: visible !important;
+}
+
+.full-width-content .sidebar-panel {
+  padding: 0;
+}
+
+/* FOOTER */
+footer {
+  margin-top: auto;
+  width: 100%;
+}
+
+/* --- ESTILOS GENERALES --- */
+h2 {
+  font-weight: 800;
+  color: var(--secondary-color);
+  font-size: 1.5rem;
+  margin-top: 0;
+}
+
+label {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--text-gray);
+  margin-bottom: 6px;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+input, select {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #FAFAFA;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-weight: 700;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Inter', sans-serif;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 12px;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 10px rgba(215, 25, 32, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(215, 25, 32, 0.3);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  background-color: #CBD5E0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-icon-only {
+  padding: 12px;
+  background-color: var(--secondary-color);
+  color: white;
+  border-radius: 12px;
+  height: fit-content;
+  flex-shrink: 0;
+}
+
+.info-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+/* Spinner de carga */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========== CLASES RESPONSIVE HELPER ========== */
+
+/* Contenedores con ancho máximo */
+.container-responsive {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Grid responsive para cards */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* Flex responsive */
+.flex-responsive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+/* Botones en grupo responsive */
+.btn-group-responsive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-group-responsive > * {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* Tablas responsive */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive table {
+  min-width: 600px;
+}
+
+/* Cards de métricas responsive */
+.metric-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: all 0.3s;
+}
+
+.metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* ========== RESPONSIVE BREAKPOINTS ========== */
+
+/* TABLETS (900px - 1200px) */
+@media (max-width: 1200px) {
+  .sidebar-container {
+    width: 380px;
+    min-width: 380px;
+  }
+
+  .sidebar-panel {
+    padding: 20px;
+  }
+}
+
+/* TABLETS PEQUEÑAS Y MÓVILES GRANDES (768px - 900px) */
+@media (max-width: 900px) {
+  .mobile-menu-btn {
+    display: block;
+  }
+
+  .desktop-links {
+    display: none;
+  }
+
+  /* Contenedor principal en móvil */
+  .main-content-area {
+    flex-direction: column;
+    min-height: auto;
+    height: auto;
+  }
+
+  /* Sidebar en móvil */
+  .sidebar-container {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    min-height: auto;
+    border-right: none;
+    border-radius: 0;
+    margin: 0;
+    box-shadow: none;
+  }
+
+  .sidebar-panel {
+    padding: 20px;
+  }
+
+  /* Mapa en móvil */
+  .map-wrapper {
+    flex: none;
+    width: 100%;
+    height: 45vh;
+    min-height: 300px;
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid var(--border-color);
+    order: 2;
+  }
+
+  /* Full width content en móvil */
+  .full-width-content {
+    min-height: auto;
+  }
+
+  /* Dropdown móvil */
+  .mobile-dropdown .nav-link {
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 1rem;
+  }
+
+  /* Cards responsive */
+  .info-card {
+    padding: 16px;
+  }
+
+  /* Botones en móvil */
+  .btn-primary {
+    padding: 14px 18px;
+    font-size: 0.9rem;
+  }
+
+  /* Headers en móvil */
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  /* Footer en móvil */
+  footer {
+    padding: 25px 15px 15px 15px;
+  }
+
+  /* Grid para métricas en tablet */
+  .grid-responsive {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+/* MÓVILES MEDIANOS (480px - 768px) */
+@media (max-width: 768px) {
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+  }
+
+  .sidebar-panel {
+    padding: 16px;
+  }
+
+  .btn-primary {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+
+  input, select {
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+
+  .info-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  /* Map wrapper en móvil */
+  .map-wrapper {
+    height: 40vh;
+    min-height: 280px;
+  }
+
+  /* Grid para métricas */
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* Metric cards más compactas */
+  .metric-card {
+    padding: 15px;
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+
+  /* Botones en grupo */
+  .btn-group-responsive > * {
+    min-width: 100%;
+  }
+}
+
+/* MÓVILES PEQUEÑOS (menos de 480px) */
+@media (max-width: 480px) {
+  h2 {
+    font-size: 1.15rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  .sidebar-panel {
+    padding: 12px;
+  }
+
+  .btn-primary {
+    padding: 12px 14px;
+    font-size: 0.8rem;
+  }
+
+  input, select {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+  }
+
+  label {
+    font-size: 0.7rem;
+  }
+
+  .info-card {
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+
+  /* Map wrapper en móvil pequeño */
+  .map-wrapper {
+    height: 35vh;
+    min-height: 250px;
+  }
+
+  /* Grid de métricas en una columna */
+  .grid-responsive {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Metric cards pequeñas */
+  .metric-card {
+    padding: 12px;
+    flex-direction: row;
+    text-align: left;
+  }
+
+  /* Tablas más pequeñas */
+  .table-responsive table {
+    font-size: 0.8rem;
+  }
+
+  .table-responsive th,
+  .table-responsive td {
+    padding: 8px 6px !important;
+  }
+
+  /* Footer muy compacto */
+  footer {
+    padding: 20px 12px 12px 12px;
+  }
+}
+
+/* PANTALLAS MUY PEQUEÑAS (menos de 360px) */
+@media (max-width: 360px) {
+  h2 {
+    font-size: 1.05rem;
+  }
+
+  .sidebar-panel {
+    padding: 10px;
+  }
+
+  .btn-primary {
+    padding: 10px 12px;
+    font-size: 0.75rem;
+  }
+
+  .info-card {
+    padding: 10px;
+  }
+
+  .map-wrapper {
+    height: 30vh;
+    min-height: 220px;
+  }
+}
+
+/* ========== UTILIDADES RESPONSIVE ========== */
+
+/* Ocultar en móvil */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Ocultar en desktop */
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* Texto más pequeño en móvil */
+@media (max-width: 480px) {
+  .text-responsive {
+    font-size: 0.85rem !important;
+  }
+
+  .text-sm-responsive {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Scroll horizontal para elementos largos */
+.overflow-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.overflow-scroll-x::-webkit-scrollbar {
+  height: 6px;
+}
+
+.overflow-scroll-x::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.overflow-scroll-x::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+/* Espaciado adaptativo */
+.p-responsive {
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .p-responsive {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .p-responsive {
+    padding: 12px;
+  }
+}
+
+/* Margen adaptativo */
+.mb-responsive {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .mb-responsive {
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mb-responsive {
+    margin-bottom: 10px;
+  }
+}
+
+/* Gap adaptativo para flex/grid */
+.gap-responsive {
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .gap-responsive {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gap-responsive {
+    gap: 10px;
+  }
+}
