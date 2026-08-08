@@ -94,6 +94,27 @@ function AppContent() {
   const [routeGeoJSON, setRouteGeoJSON] = useState(null);
   const [lastCreatedOrder, setLastCreatedOrder] = useState(null);
 
+  // ============ ESTADOS DE SELECCIÓN Y BÚSQUEDA ============
+  const [mapSelectionMode, setMapSelectionMode] = useState(null); // 'origin' | 'destination' | null
+  const mapSelectionModeRef = useRef(null);
+  useEffect(() => {
+    mapSelectionModeRef.current = mapSelectionMode;
+  }, [mapSelectionMode]);
+
+  const [originInput, setOriginInput] = useState('');
+  const [destinationInput, setDestinationInput] = useState('');
+
+  const originMarker = useRef(null);
+  const destinationMarker = useRef(null);
+
+  useEffect(() => {
+    setOriginInput(origin ? origin.address : '');
+  }, [origin]);
+
+  useEffect(() => {
+    setDestinationInput(destination ? destination.address : '');
+  }, [destination]);
+
   // ACTUALIZADO: Rutas sin mapa (agregamos las de admin, historial y ganancias)
   const routesWithoutMap = [
     '/', 
