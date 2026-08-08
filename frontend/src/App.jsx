@@ -461,8 +461,12 @@ function AppContent() {
                             setPackageSize={setPackageSize}
                             urgency={urgency}
                             setUrgency={setUrgency}
-                            searchQuery={searchQuery}
-                            setSearchQuery={setSearchQuery}
+                            originInput={originInput}
+                            setOriginInput={setOriginInput}
+                            destinationInput={destinationInput}
+                            setDestinationInput={setDestinationInput}
+                            mapSelectionMode={mapSelectionMode}
+                            setMapSelectionMode={setMapSelectionMode}
                             handleGeocode={handleGeocode}
                             lastCreatedOrder={lastCreatedOrder}
                             setLastCreatedOrder={setLastCreatedOrder}
@@ -566,7 +570,50 @@ function AppContent() {
             </div>
         </div>
         
-        <div className="map-wrapper" style={!shouldShowMap ? { display: 'none' } : {}}>
+        <div className="map-wrapper" style={!shouldShowMap ? { display: 'none' } : { position: 'relative' }}>
+            {mapSelectionMode && (
+              <div style={{
+                position: 'absolute',
+                top: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 1000,
+                background: 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(8px)',
+                padding: '12px 24px',
+                borderRadius: '12px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                fontWeight: 'bold',
+                color: '#2C3E50',
+                pointerEvents: 'auto'
+              }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {mapSelectionMode === 'origin' ? '🟢 Selecciona el origen en el mapa' : '🔴 Selecciona el destino en el mapa'}
+                </span>
+                <button 
+                  onClick={() => setMapSelectionMode(null)}
+                  style={{
+                    background: '#f3f4f6',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '4px 8px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    color: '#ef4444',
+                    fontWeight: 'bold',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.target.style.background = '#fee2e2'}
+                  onMouseLeave={(e) => e.target.style.background = '#f3f4f6'}
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
             <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
         </div>
       </div>
