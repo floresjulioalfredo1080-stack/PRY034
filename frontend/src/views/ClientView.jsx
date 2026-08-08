@@ -8,8 +8,10 @@ export default function ClientView({
   paymentMethod, setPaymentMethod,
   packageSize, setPackageSize,
   urgency, setUrgency,
-  searchQuery, setSearchQuery, handleGeocode, handleCreateOrder,
-  lastCreatedOrder, setLastCreatedOrder
+  originInput, setOriginInput,
+  destinationInput, setDestinationInput,
+  mapSelectionMode, setMapSelectionMode,
+  handleGeocode, lastCreatedOrder, setLastCreatedOrder
 }) {
   const navigate = useNavigate();
   const toast = useToast();
@@ -223,77 +225,141 @@ export default function ClientView({
         📦 Cotizar Envío
       </h2>
 
-      {/* Barra de búsqueda */}
-      <div style={{
-        display: 'flex',
-        gap: '8px',
-        marginBottom: '20px'
-      }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <Search size={18} color="#999" style={{
-            position: 'absolute',
-            left: 12,
-            top: '50%',
-            transform: 'translateY(-50%)'
-          }}/>
-          <input
-            placeholder="Buscar calle..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleGeocode()}
-            style={{
-              paddingLeft: '38px',
-              marginBottom: 0,
-              width: '100%',
-              fontSize: 'clamp(0.85rem, 2.5vw, 1rem)'
-            }}
-          />
-        </div>
-        <button className="btn-icon-only" onClick={handleGeocode} style={{ flexShrink: 0 }}>
-          <Search size={18}/>
-        </button>
-      </div>
-
-      {/* Card de direcciones */}
-      <div className="info-card">
-        <div style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          marginBottom: '16px',
-          gap: '10px'
+      {/* Selector de Direcciones */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
+        
+        {/* DIRECCIÓN DE ORIGEN */}
+        <div className="info-card" style={{ 
+          padding: '12px', 
+          borderLeft: '4px solid #16a34a',
+          background: mapSelectionMode === 'origin' ? '#f0fdf4' : '',
+          borderColor: mapSelectionMode === 'origin' ? '#16a34a' : ''
         }}>
-          <MapPin color="#16a34a" size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <strong style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}>ORIGEN:</strong>
-            <div style={{
-              color: '#666',
-              fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
-              marginTop: '4px',
-              wordBreak: 'break-word'
-            }}>
-              {origin ? origin.address : 'Haz clic en el mapa'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <MapPin color="#16a34a" size={18} />
+            <strong style={{ fontSize: '0.85rem', color: '#2C3E50' }}>DIRECCIÓN DE ORIGEN</strong>
+          </div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <input
+                placeholder="Escribe la dirección de origen..."
+                value={originInput}
+                onChange={(e) => setOriginInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleGeocode('origin')}
+                style={{
+                  marginBottom: 0,
+                  width: '100%',
+                  fontSize: '0.9rem',
+                  paddingRight: '30px'
+                }}
+              />
             </div>
+            <button 
+              className="btn-icon-only" 
+              onClick={() => handleGeocode('origin')} 
+              title="Buscar dirección"
+              style={{ padding: '8px 12px', height: '100%' }}
+            >
+              <Search size={16}/>
+            </button>
+            <button 
+              onClick={() => setMapSelectionMode(mapSelectionMode === 'origin' ? null : 'origin')}
+              title="Marcar en el mapa"
+              style={{
+                padding: '8px 12px',
+                background: mapSelectionMode === 'origin' ? '#16a34a' : '#f3f4f6',
+                color: mapSelectionMode === 'origin' ? 'white' : '#555',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s',
+                boxShadow: mapSelectionMode === 'origin' ? '0 0 8px rgba(22, 163, 74, 0.4)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (mapSelectionMode !== 'origin') {
+                  e.currentTarget.style.background = '#e5e7eb';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (mapSelectionMode !== 'origin') {
+                  e.currentTarget.style.background = '#f3f4f6';
+                }
+              }}
+            >
+              <MapPin size={16} />
+            </button>
           </div>
         </div>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '10px'
+        {/* DIRECCIÓN DE DESTINO */}
+        <div className="info-card" style={{ 
+          padding: '12px', 
+          borderLeft: '4px solid #dc2626',
+          background: mapSelectionMode === 'destination' ? '#fef2f2' : '',
+          borderColor: mapSelectionMode === 'destination' ? '#dc2626' : ''
         }}>
-          <MapPin color="#dc2626" size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <strong style={{ fontSize: 'clamp(0.75rem, 2vw, 0.85rem)' }}>DESTINO:</strong>
-            <div style={{
-              color: '#666',
-              fontSize: 'clamp(0.8rem, 2vw, 0.9rem)',
-              marginTop: '4px',
-              wordBreak: 'break-word'
-            }}>
-              {destination ? destination.address : 'Haz clic en el mapa'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <MapPin color="#dc2626" size={18} />
+            <strong style={{ fontSize: '0.85rem', color: '#2C3E50' }}>DIRECCIÓN DE DESTINO</strong>
+          </div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <input
+                placeholder="Escribe la dirección de destino..."
+                value={destinationInput}
+                onChange={(e) => setDestinationInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleGeocode('destination')}
+                style={{
+                  marginBottom: 0,
+                  width: '100%',
+                  fontSize: '0.9rem',
+                  paddingRight: '30px'
+                }}
+              />
             </div>
+            <button 
+              className="btn-icon-only" 
+              onClick={() => handleGeocode('destination')} 
+              title="Buscar dirección"
+              style={{ padding: '8px 12px', height: '100%' }}
+            >
+              <Search size={16}/>
+            </button>
+            <button 
+              onClick={() => setMapSelectionMode(mapSelectionMode === 'destination' ? null : 'destination')}
+              title="Marcar en el mapa"
+              style={{
+                padding: '8px 12px',
+                background: mapSelectionMode === 'destination' ? '#dc2626' : '#f3f4f6',
+                color: mapSelectionMode === 'destination' ? 'white' : '#555',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s',
+                boxShadow: mapSelectionMode === 'destination' ? '0 0 8px rgba(220, 38, 38, 0.4)' : 'none'
+              }}
+              onMouseEnter={(e) => {
+                if (mapSelectionMode !== 'destination') {
+                  e.currentTarget.style.background = '#e5e7eb';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (mapSelectionMode !== 'destination') {
+                  e.currentTarget.style.background = '#f3f4f6';
+                }
+              }}
+            >
+              <MapPin size={16} />
+            </button>
           </div>
         </div>
+
       </div>
 
       {/* Card de precio */}
