@@ -261,6 +261,7 @@ function AppContent() {
           setDestination(pointData);
           setDestinationMarker([lng, lat]);
           setMapSelectionMode(null);
+        }
       });
     }
   }, [location.pathname]);
