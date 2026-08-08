@@ -101,6 +101,11 @@ function AppContent() {
     mapSelectionModeRef.current = mapSelectionMode;
   }, [mapSelectionMode]);
 
+  const locationPathnameRef = useRef(location.pathname);
+  useEffect(() => {
+    locationPathnameRef.current = location.pathname;
+  }, [location.pathname]);
+
   const [originInput, setOriginInput] = useState('');
   const [destinationInput, setDestinationInput] = useState('');
 
@@ -244,7 +249,7 @@ function AppContent() {
       map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
       map.current.on('click', async (e) => {
-        if (location.pathname !== '/client') return;
+        if (locationPathnameRef.current !== '/client') return;
         
         const mode = mapSelectionModeRef.current;
         if (!mode) return;
