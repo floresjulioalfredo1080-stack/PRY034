@@ -142,19 +142,29 @@ function AppContent() {
   useEffect(() => { fetchData(); }, []);
 
   // --- FUNCIONES DEL MAPA ---
+  const setOriginMarker = (coords) => {
+    if (originMarker.current) originMarker.current.remove();
+    if (map.current) {
+      originMarker.current = new maplibregl.Marker({ color: '#16a34a' }).setLngLat(coords).addTo(map.current);
+    }
+  };
+
+  const setDestinationMarker = (coords) => {
+    if (destinationMarker.current) destinationMarker.current.remove();
+    if (map.current) {
+      destinationMarker.current = new maplibregl.Marker({ color: '#dc2626' }).setLngLat(coords).addTo(map.current);
+    }
+  };
+
   const clearMap = () => {
     if (!map.current) return;
+    if (originMarker.current) { originMarker.current.remove(); originMarker.current = null; }
+    if (destinationMarker.current) { destinationMarker.current.remove(); destinationMarker.current = null; }
     markers.current.forEach(m => m.remove()); 
     markers.current = [];
     if (driverMarker.current) driverMarker.current.remove();
     if (map.current.getLayer(routeLayerId)) map.current.removeLayer(routeLayerId);
     if (map.current.getSource(routeLayerId)) map.current.removeSource(routeLayerId);
-  };
-
-  const addMarker = (coords, color) => {
-    if (!map.current) return;
-    const m = new maplibregl.Marker({ color }).setLngLat(coords).addTo(map.current);
-    markers.current.push(m);
   };
 
   const drawRoute = (geojson) => {
@@ -236,22 +246,21 @@ function AppContent() {
       map.current.on('click', async (e) => {
         if (location.pathname !== '/client') return;
         
+        const mode = mapSelectionModeRef.current;
+        if (!mode) return;
+
         const { lng, lat } = e.lngLat;
-        const count = markers.current.length;
         const addressName = await fetchAddressName(lng, lat);
         const pointData = { lat, lng, address: addressName };
 
-        if (count === 0) {
-          addMarker([lng, lat], '#16a34a'); setOrigin(pointData); setDestination(null); setDistance(0); setPrice(0);
-        } else if (count === 1) {
-          addMarker([lng, lat], '#dc2626'); setDestination(pointData);
-          const startLngLat = markers.current[0].getLngLat();
-          const startPoint = { lng: startLngLat.lng, lat: startLngLat.lat };
-          calculateStraightDistance(startPoint, pointData); 
-          const geometry = await fetchRoute(startPoint, pointData);
-          if (geometry) drawRoute(geometry);
-        } else {
-          clearMap(); addMarker([lng, lat], '#16a34a'); setOrigin(pointData); setDestination(null); setDistance(0); setPrice(0);
+        if (mode === 'origin') {
+          setOrigin(pointData);
+          setOriginMarker([lng, lat]);
+          setMapSelectionMode(null);
+        } else if (mode === 'destination') {
+          setDestination(pointData);
+          setDestinationMarker([lng, lat]);
+          setMapSelectionMode(null);
         }
       });
     }
