@@ -261,10 +261,28 @@ function AppContent() {
           setDestination(pointData);
           setDestinationMarker([lng, lat]);
           setMapSelectionMode(null);
-        }
       });
     }
   }, [location.pathname]);
+
+  // Efecto reactivo para actualizar ruta
+  useEffect(() => {
+    const updateRoute = async () => {
+      if (origin && destination) {
+        const startPoint = { lng: origin.lng, lat: origin.lat };
+        const endPoint = { lng: destination.lng, lat: destination.lat };
+        calculateStraightDistance(startPoint, endPoint);
+        const geometry = await fetchRoute(startPoint, endPoint);
+        if (geometry) drawRoute(geometry);
+      } else {
+        if (map.current) {
+          if (map.current.getLayer(routeLayerId)) map.current.removeLayer(routeLayerId);
+          if (map.current.getSource(routeLayerId)) map.current.removeSource(routeLayerId);
+        }
+      }
+    };
+    updateRoute();
+  }, [origin, destination]);
 
   const visualizeOrderOnMap = async (order) => {
     clearMap();
