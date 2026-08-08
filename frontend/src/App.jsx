@@ -394,12 +394,38 @@ function AppContent() {
     if (res.ok) { const order = await res.json(); setTrackedOrder(order); visualizeOrderOnMap(order); }
   };
   
-  const handleGeocode = async () => { 
-    if (!searchQuery) return;
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}, Arequipa`);
-    const data = await res.json();
-    if (data.length > 0 && map.current) {
-        map.current.flyTo({ center: [parseFloat(data[0].lon), parseFloat(data[0].lat)], zoom: 16 });
+  const handleGeocode = async (type) => { 
+    const query = type === 'origin' ? originInput : destinationInput;
+    if (!query) return;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}, Arequipa`);
+      const data = await res.json();
+      if (data.length > 0 && map.current) {
+        const first = data[0];
+        const lat = parseFloat(first.lat);
+        const lng = parseFloat(first.lon);
+        
+        const display = first.display_name;
+        const parts = display.split(',');
+        const addressName = parts.slice(0, 3).join(',').trim();
+
+        const pointData = { lat, lng, address: addressName };
+
+        if (type === 'origin') {
+          setOrigin(pointData);
+          setOriginMarker([lng, lat]);
+        } else {
+          setDestination(pointData);
+          setDestinationMarker([lng, lat]);
+        }
+
+        map.current.flyTo({ center: [lng, lat], zoom: 16 });
+      } else {
+        toast.warning("No se encontró la dirección.");
+      }
+    } catch (error) {
+      console.error("Error geocode", error);
+      toast.error("Error al buscar la ubicación.");
     }
   };
 
