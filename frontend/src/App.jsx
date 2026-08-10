@@ -94,6 +94,10 @@ function AppContent() {
   const [routeGeoJSON, setRouteGeoJSON] = useState(null);
   const [lastCreatedOrder, setLastCreatedOrder] = useState(null);
 
+  // ============ ESTADOS DE ADMIN ============
+  const [adminClients, setAdminClients] = useState([]);
+  const [adminDrivers, setAdminDrivers] = useState([]);
+
   // ============ ESTADOS DE SELECCIÓN Y BÚSQUEDA ============
   const [mapSelectionMode, setMapSelectionMode] = useState(null); // 'origin' | 'destination' | null
   const mapSelectionModeRef = useRef(null);
