@@ -510,6 +510,86 @@ app.patch("/api/admin/drivers/:id/verify", async (req, res) => {
   }
 });
 
+// LISTAR TODOS LOS CLIENTES (ADMIN)
+app.get("/api/admin/clients", async (req, res) => {
+  try {
+    const clients = await prisma.user.findMany({
+      where: { role: 'client' },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(clients);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// LISTAR TODOS LOS CONDUCTORES (ADMIN)
+app.get("/api/admin/drivers/all", async (req, res) => {
+  try {
+    const drivers = await prisma.driver.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(drivers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// REGISTRAR CONDUCTOR DIRECTO POR ADMIN
+app.post("/api/admin/register/driver", async (req, res) => {
+  try {
+    const { 
+      name, email, phone, password,
+      vehicleType, vehiclePlate, vehicleBrand, vehicleModel, vehicleYear
+    } = req.body;
+
+    const existing = await prisma.driver.findUnique({ where: { email } });
+    if (existing) {
+      return res.status(400).json({ error: "El email ya está registrado" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const driver = await prisma.driver.create({
+      data: {
+        name,
+        email,
+        phone,
+        password: hashedPassword,
+        vehicleType,
+        vehiclePlate,
+        vehicleBrand,
+        vehicleModel,
+        vehicleYear: parseInt(vehicleYear),
+        isOnline: false,
+        isVerified: true
+      }
+    });
+
+    res.status(201).json({ 
+      message: "Conductor registrado exitosamente por administrador",
+      driver: { id: driver.id, name: driver.name, email: driver.email }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ELIMINAR PEDIDO
+app.delete("/api/orders/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.order.delete({
+      where: { id }
+    });
+    res.json({ message: "Pedido eliminado exitosamente" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ============ RUTAS ANTERIORES (MANTENIDAS) ============
 
 // Semilla de Conductores
