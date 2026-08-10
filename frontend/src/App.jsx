@@ -148,7 +148,38 @@ function AppContent() {
       if (resDrivers.ok) setDrivers(await resDrivers.json());
     } catch (e) { console.error("Error data"); }
   };
-  useEffect(() => { fetchData(); }, []);
+
+  const fetchAdminData = async () => {
+    try {
+      const resClients = await fetch('http://localhost:3001/api/admin/clients');
+      if (resClients.ok) setAdminClients(await resClients.json());
+      const resDriversAll = await fetch('http://localhost:3001/api/admin/drivers/all');
+      if (resDriversAll.ok) setAdminDrivers(await resDriversAll.json());
+    } catch (e) { console.error("Error fetching admin data", e); }
+  };
+
+  const handleAdminDeleteOrder = async (orderId) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar este pedido?")) return;
+    try {
+      const res = await fetch(`http://localhost:3001/api/orders/${orderId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        toast.success("Pedido eliminado correctamente");
+        fetchData(); // Recargar pedidos
+      } else {
+        toast.error("Error al eliminar el pedido");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Error al eliminar el pedido");
+    }
+  };
+
+  useEffect(() => { 
+    fetchData(); 
+    fetchAdminData();
+  }, []);
 
   // --- FUNCIONES DEL MAPA ---
   const setOriginMarker = (coords) => {
