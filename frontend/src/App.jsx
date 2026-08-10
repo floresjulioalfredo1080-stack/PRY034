@@ -537,6 +537,10 @@ function AppContent() {
                             selectedDrivers={selectedDrivers} 
                             setSelectedDrivers={setSelectedDrivers} 
                             updateStatus={updateStatus} 
+                            adminClients={adminClients}
+                            adminDrivers={adminDrivers}
+                            fetchAdminData={fetchAdminData}
+                            onDeleteOrder={handleAdminDeleteOrder}
                           />
                         </ProtectedRoute>
                       } 
