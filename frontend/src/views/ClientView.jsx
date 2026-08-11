@@ -221,9 +221,32 @@ export default function ClientView({
   // FORMULARIO NORMAL - RESPONSIVE
   return (
     <div style={{ width: '100%' }}>
-      <h2 style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.4rem)' }}>
-        📦 Cotizar Envío
-      </h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+        <h2 style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.4rem)', margin: 0 }}>
+          📦 Cotizar Envío
+        </h2>
+        <button 
+          onClick={() => navigate('/client/history')}
+          style={{
+            background: '#2C3E50',
+            color: 'white',
+            border: 'none',
+            padding: '8px 14px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#1a252f'}
+          onMouseLeave={(e) => e.currentTarget.style.background = '#2C3E50'}
+        >
+          <Clock size={16} /> Mis Pedidos
+        </button>
+      </div>
 
       {/* Selector de Direcciones */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
