@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Package, MapPin, Clock, DollarSign, CheckCircle, AlertCircle, Navigation, FileText, MessageCircle } from 'lucide-react';
 
 export default function ClientHistoryView() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -64,18 +65,43 @@ export default function ClientHistoryView() {
       {/* Header - RESPONSIVE */}
       <div style={{
         display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        gap: '12px',
-        marginBottom: '10px'
+        marginBottom: '10px',
+        flexWrap: 'wrap',
+        gap: '12px'
       }}>
-        <Clock size={28} color="#D71920"/>
-        <h2 style={{
-          color: '#2C3E50',
-          margin: 0,
-          fontSize: 'clamp(1.1rem, 3.5vw, 1.4rem)'
-        }}>
-          Historial de Pedidos
-        </h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <Clock size={28} color="#D71920"/>
+          <h2 style={{
+            color: '#2C3E50',
+            margin: 0,
+            fontSize: 'clamp(1.1rem, 3.5vw, 1.4rem)'
+          }}>
+            Historial de Pedidos
+          </h2>
+        </div>
+        <button
+          onClick={() => navigate('/client')}
+          style={{
+            background: '#D71920',
+            color: 'white',
+            border: 'none',
+            padding: '8px 16px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#b91c1c'}
+          onMouseLeave={(e) => e.currentTarget.style.background = '#D71920'}
+        >
+          <Package size={16} /> Nuevo Envío
+        </button>
       </div>
       <p style={{
         color: '#666',
@@ -106,6 +132,13 @@ export default function ClientHistoryView() {
           }}>
             Cuando realices tu primer envío, aparecerá aquí.
           </p>
+          <button
+            onClick={() => navigate('/client')}
+            className="btn-primary"
+            style={{ marginTop: '15px', width: 'auto', padding: '10px 20px' }}
+          >
+            Crear mi primer envío
+          </button>
         </div>
       ) : (
         <div style={{
