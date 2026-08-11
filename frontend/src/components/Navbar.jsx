@@ -73,7 +73,10 @@ export default function Navbar({ userRole, onLogout }) {
           <NavLink to="/tracking" icon={<MapPin size={18}/>} label="Rastreo"/>
 
           {userRole === 'client' && (
-            <NavLink to="/client" icon={<FileText size={18}/>} label="Enviar"/>
+            <>
+              <NavLink to="/client" icon={<FileText size={18}/>} label="Enviar"/>
+              <NavLink to="/client/history" icon={<Clock size={18}/>} label="Historial"/>
+            </>
           )}
 
           {userRole === 'admin' && (
