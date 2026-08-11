@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, MapPin, Clock, DollarSign, CheckCircle, AlertCircle, Navigation, FileText, MessageCircle } from 'lucide-react';
+import { Package, MapPin, Clock, DollarSign, CheckCircle, AlertCircle, Navigation, FileText, MessageCircle, XCircle } from 'lucide-react';
 
 export default function ClientHistoryView() {
   const navigate = useNavigate();
@@ -147,7 +147,7 @@ export default function ClientHistoryView() {
           gap: 'clamp(10px, 2vw, 15px)'
         }}>
           {orders.map(order => (
-            <OrderCard key={order.id} order={order} />
+            <OrderCard key={order.id} order={order} onCancelSuccess={fetchMyOrders} />
           ))}
         </div>
       )}
@@ -155,7 +155,7 @@ export default function ClientHistoryView() {
   );
 }
 
-function OrderCard({ order }) {
+function OrderCard({ order, onCancelSuccess }) {
   const navigate = useNavigate();
 
   const normalizedStatus = order.status ? order.status.toUpperCase().replace(/\s+/g, '_') : 'PENDIENTE';
@@ -164,14 +164,16 @@ function OrderCard({ order }) {
     'PENDIENTE': { color: '#f59e0b', bg: '#FEF3C7', icon: <AlertCircle size={16}/> },
     'ASIGNADO': { color: '#3b82f6', bg: '#DBEAFE', icon: <Package size={16}/> },
     'EN_CAMINO': { color: '#8b5cf6', bg: '#E9D5FF', icon: <Navigation size={16}/> },
-    'ENTREGADO': { color: '#16a34a', bg: '#D1FAE5', icon: <CheckCircle size={16}/> }
+    'ENTREGADO': { color: '#16a34a', bg: '#D1FAE5', icon: <CheckCircle size={16}/> },
+    'CANCELADO': { color: '#dc2626', bg: '#FEE2E2', icon: <XCircle size={16}/> }
   };
 
   const displayNames = {
     'PENDIENTE': 'Pendiente',
     'ASIGNADO': 'Asignado',
     'EN_CAMINO': 'En Camino',
-    'ENTREGADO': 'Entregado'
+    'ENTREGADO': 'Entregado',
+    'CANCELADO': 'Cancelado'
   };
 
   const status = statusConfig[normalizedStatus] || statusConfig['PENDIENTE'];
@@ -179,6 +181,26 @@ function OrderCard({ order }) {
 
   const handleTrack = () => {
     navigate(`/tracking?id=${order.id}`);
+  };
+
+  const handleCancel = async () => {
+    if (!confirm("¿Estás seguro de que deseas cancelar este pedido?")) return;
+    try {
+      const response = await fetch(`http://localhost:3001/api/orders/${order.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELADO' })
+      });
+      if (response.ok) {
+        alert("✅ Pedido cancelado exitosamente");
+        if (onCancelSuccess) onCancelSuccess();
+      } else {
+        alert("❌ Error al cancelar el pedido");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("❌ Error al cancelar el pedido");
+    }
   };
 
   return (
@@ -424,6 +446,34 @@ function OrderCard({ order }) {
         >
           <MessageCircle size={16}/> Compartir
         </button>
+
+        {/* Botón Cancelar - Solo si NO está entregado ni cancelado */}
+        {normalizedStatus !== 'ENTREGADO' && normalizedStatus !== 'CANCELADO' && (
+          <button
+            onClick={handleCancel}
+            style={{
+              flex: 1,
+              minWidth: 'min(140px, 100%)',
+              padding: 'clamp(10px, 2.5vw, 12px) clamp(15px, 3vw, 20px)',
+              background: '#fef2f2',
+              color: '#dc2626',
+              border: '1px solid #fee2e2',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              fontSize: 'clamp(0.75rem, 2vw, 0.9rem)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#fee2e2'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#fef2f2'}
+          >
+            <XCircle size={16}/> Cancelar Pedido
+          </button>
+        )}
       </div>
     </div>
   );
