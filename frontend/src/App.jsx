@@ -325,30 +325,8 @@ function AppContent() {
     updateRoute();
   }, [origin, destination]);
 
-  const visualizeOrderOnMap = async (order) => {
-    clearMap();
-    const startPoint = { lng: order.originLng, lat: order.originLat };
-    const endPoint = { lng: order.destLng, lat: order.destLat };
-    addMarker([startPoint.lng, startPoint.lat], '#16a34a');
-    addMarker([endPoint.lng, endPoint.lat], '#dc2626');
-    
-    if (map.current) {
-        const bounds = new maplibregl.LngLatBounds([startPoint.lng, startPoint.lat], [endPoint.lng, endPoint.lat]);
-        map.current.fitBounds(bounds, { padding: 50 });
-    }
-
-    const geometry = await fetchRoute(startPoint, endPoint);
-    if (geometry) { 
-        drawRoute(geometry); 
-        setRouteGeoJSON(geometry); 
-    }
-  };
-
-  const startSimulation = () => {
-    if (!routeGeoJSON || !routeGeoJSON.coordinates) {
-        toast.warning("Primero debes ver una ruta en el mapa");
-        return;
-    }
+  const runSimulationWithGeometry = (geometry) => {
+    if (!geometry || !geometry.coordinates) return;
     if (!map.current) return;
 
     if (driverMarker.current) driverMarker.current.remove();
@@ -366,10 +344,10 @@ function AppContent() {
     el.style.cursor = 'pointer';
 
     driverMarker.current = new maplibregl.Marker({ element: el, anchor: 'center' })
-        .setLngLat(routeGeoJSON.coordinates[0])
+        .setLngLat(geometry.coordinates[0])
         .addTo(map.current);
 
-    const line = turf.lineString(routeGeoJSON.coordinates);
+    const line = turf.lineString(geometry.coordinates);
     const totalDistance = turf.length(line, { units: 'kilometers' });
     const duration = 5000;
     const start = performance.now();
@@ -379,8 +357,8 @@ function AppContent() {
         const progress = elapsed / duration;
 
         if (progress >= 1) {
-            const endCoords = routeGeoJSON.coordinates[routeGeoJSON.coordinates.length - 1];
-            driverMarker.current.setLngLat(endCoords);
+            const endCoords = geometry.coordinates[geometry.coordinates.length - 1];
+            if (driverMarker.current) driverMarker.current.setLngLat(endCoords);
             return; 
         }
 
@@ -388,7 +366,7 @@ function AppContent() {
         
         try {
             const segment = turf.along(line, currentDist, { units: 'kilometers' });
-            if (segment && segment.geometry) {
+            if (segment && segment.geometry && driverMarker.current) {
                 driverMarker.current.setLngLat(segment.geometry.coordinates);
             }
         } catch (error) {
@@ -399,6 +377,56 @@ function AppContent() {
     };
 
     requestAnimationFrame(animate);
+  };
+
+  const visualizeOrderOnMap = async (order) => {
+    clearMap();
+    const startPoint = { lng: order.originLng, lat: order.originLat };
+    const endPoint = { lng: order.destLng, lat: order.destLat };
+    addMarker([startPoint.lng, startPoint.lat], '#16a34a');
+    addMarker([endPoint.lng, endPoint.lat], '#dc2626');
+    
+    if (map.current) {
+        const bounds = new maplibregl.LngLatBounds([startPoint.lng, startPoint.lat], [endPoint.lng, endPoint.lat]);
+        map.current.fitBounds(bounds, { padding: 50 });
+    }
+
+    const geometry = await fetchRoute(startPoint, endPoint);
+    if (geometry) { 
+        drawRoute(geometry); 
+        setRouteGeoJSON(geometry); 
+
+        const normalizedStatus = order.status ? order.status.toUpperCase().replace(/\s+/g, '_') : 'PENDIENTE';
+        if (normalizedStatus === 'EN_CAMINO') {
+          // Iniciar simulación de recorrido en vivo de inmediato
+          runSimulationWithGeometry(geometry);
+        } else if (normalizedStatus === 'ASIGNADO') {
+          // Colocar moto estática en el punto de origen
+          if (driverMarker.current) driverMarker.current.remove();
+          const el = document.createElement('div');
+          el.innerHTML = '🛵';
+          el.style.fontSize = '40px';
+          el.style.width = '50px';
+          el.style.height = '50px';
+          el.style.display = 'flex';
+          el.style.justifyContent = 'center';
+          el.style.alignItems = 'center';
+          el.style.zIndex = '1000';
+          el.style.textShadow = '0 0 10px white';
+
+          driverMarker.current = new maplibregl.Marker({ element: el, anchor: 'center' })
+              .setLngLat([startPoint.lng, startPoint.lat])
+              .addTo(map.current);
+        }
+    }
+  };
+
+  const startSimulation = () => {
+    if (!routeGeoJSON || !routeGeoJSON.coordinates) {
+        toast.warning("Primero debes ver una ruta en el mapa");
+        return;
+    }
+    runSimulationWithGeometry(routeGeoJSON);
   };
   
   const updateStatus = async (id, status, driverId=null) => {
