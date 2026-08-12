@@ -176,10 +176,61 @@ function AppContent() {
     }
   };
 
+  const [activeDriverOffer, setActiveDriverOffer] = useState(null);
+
+  const handleRejectOffer = async (orderId) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/orders/${orderId}/reject`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        toast.success("Pedido rechazado. Pasando al siguiente conductor.");
+        setActiveDriverOffer(null);
+        fetchData();
+      } else {
+        toast.error("Error al rechazar el pedido");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Error al rechazar el pedido");
+    }
+  };
+
   useEffect(() => { 
     fetchData(); 
     fetchAdminData();
   }, []);
+
+  useEffect(() => {
+    if (userRole !== 'driver') {
+      setActiveDriverOffer(null);
+      return;
+    }
+
+    const checkDriverOffer = async () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem('user_data'));
+        const driverId = userData?.id;
+        if (!driverId) return;
+
+        const res = await fetch(`http://localhost:3001/api/drivers/${driverId}/orders`);
+        if (res.ok) {
+          const orders = await res.json();
+          const pendingOffer = orders.find(o => {
+            const normalizedStatus = o.status ? o.status.toUpperCase().replace(/\s+/g, '_') : '';
+            return normalizedStatus === 'PENDIENTE';
+          });
+          setActiveDriverOffer(pendingOffer || null);
+        }
+      } catch (err) {
+        console.error("Error polling driver offer:", err);
+      }
+    };
+
+    checkDriverOffer();
+    const interval = setInterval(checkDriverOffer, 3000);
+    return () => clearInterval(interval);
+  }, [userRole]);
 
   // --- FUNCIONES DEL MAPA ---
   const setOriginMarker = (coords) => {
