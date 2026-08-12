@@ -45,6 +45,8 @@ model Driver {
   isOnline        Boolean  @default(false)
   isVerified      Boolean  @default(false) // Admin verifica documentos
   rating          Float    @default(5.0)
+  latitude        Float?
+  longitude       Float?
   
   createdAt       DateTime @default(now())
   
@@ -79,6 +81,8 @@ model Order {
   status          String   @default("PENDIENTE") // PENDIENTE, ASIGNADO, EN_CAMINO, ENTREGADO, CANCELADO
   driverId        String?
   driver          Driver?  @relation("DriverOrders", fields: [driverId], references: [id])
+  assignmentQueue String?
+  currentQueueIndex Int    @default(0)
   
   // Evidencia
   proofImage      String?
