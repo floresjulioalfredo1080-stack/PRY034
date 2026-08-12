@@ -10,7 +10,9 @@ async function main() {
       name: 'Julio',
       password: hashedPassword,
       isVerified: true,
-      isOnline: true
+      isOnline: true,
+      latitude: -16.4100,
+      longitude: -71.5350
     },
     create: {
       name: 'Julio',
@@ -23,7 +25,9 @@ async function main() {
       vehicleModel: 'CB 125',
       vehicleYear: 2023,
       isVerified: true,
-      isOnline: true
+      isOnline: true,
+      latitude: -16.4100,
+      longitude: -71.5350
     }
   });
   console.log('DRIVER_CREATED_SUCCESSFULLY:', JSON.stringify(driver));

@@ -612,7 +612,9 @@ app.get("/api/seed-drivers", async (req, res) => {
           vehicleModel: "CB 150",
           vehicleYear: 2020,
           isOnline: true,
-          isVerified: true
+          isVerified: true,
+          latitude: -16.4150,
+          longitude: -71.5400
         },
         { 
           name: "Maria López", 
@@ -625,7 +627,9 @@ app.get("/api/seed-drivers", async (req, res) => {
           vehicleModel: "Yaris",
           vehicleYear: 2021,
           isOnline: true,
-          isVerified: true
+          isVerified: true,
+          latitude: -16.4050,
+          longitude: -71.5300
         },
         { 
           name: "Pedro Castillo", 
@@ -638,7 +642,9 @@ app.get("/api/seed-drivers", async (req, res) => {
           vehicleModel: "FZ 150",
           vehicleYear: 2019,
           isOnline: true,
-          isVerified: true
+          isVerified: true,
+          latitude: -16.4200,
+          longitude: -71.5500
         },
       ]
     });
