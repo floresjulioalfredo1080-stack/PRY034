@@ -688,10 +688,46 @@ app.get("/api/orders/:id", async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Calcular distancia usando la fórmula de Haversine
+function getHaversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radio de la tierra en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c; // Distancia en km
+}
+
 // Crear Pedido
 app.post("/api/orders", async (req, res) => {
   try {
     const { customerName, origin, destination, urgency, packageSize, price, paymentMethod, userId } = req.body;
+
+    // Buscar todos los conductores activos y verificados
+    const availableDrivers = await prisma.driver.findMany({
+      where: {
+        isOnline: true,
+        isVerified: true
+      }
+    });
+
+    // Calcular distancia de cada conductor al origen del pedido
+    const driversWithDistance = availableDrivers.map(d => {
+      const dist = (d.latitude !== null && d.longitude !== null)
+        ? getHaversineDistance(+origin.lat, +origin.lng, d.latitude, d.longitude)
+        : 999999;
+      return { id: d.id, dist };
+    });
+
+    // Ordenar de menor a mayor distancia (más cercano primero)
+    driversWithDistance.sort((a, b) => a.dist - b.dist);
+
+    const driverIdsQueue = driversWithDistance.map(d => d.id);
+    const queueString = driverIdsQueue.join(',');
+    const initialDriverId = driverIdsQueue.length > 0 ? driverIdsQueue[0] : null;
 
     const order = await prisma.order.create({
       data: {
@@ -707,7 +743,10 @@ app.post("/api/orders", async (req, res) => {
         urgency: urgency || false,
         price: Number(price),
         status: "PENDIENTE",
-        paymentMethod: paymentMethod || "Efectivo"
+        paymentMethod: paymentMethod || "Efectivo",
+        assignmentQueue: queueString,
+        currentQueueIndex: 0,
+        driverId: initialDriverId
       },
     });
 
