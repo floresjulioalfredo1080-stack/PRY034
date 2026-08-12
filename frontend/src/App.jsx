@@ -758,6 +758,17 @@ function AppContent() {
           alignItems: 'center',
           padding: '20px'
         }}>
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; transform: scale(0.9); }
+              to { opacity: 1; transform: scale(1); }
+            }
+            @keyframes pulse {
+              0% { transform: scale(1); }
+              50% { transform: scale(1.1); }
+              100% { transform: scale(1); }
+            }
+          `}</style>
           <div style={{
             background: 'white',
             borderRadius: '16px',
