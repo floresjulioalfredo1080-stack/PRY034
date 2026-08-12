@@ -762,6 +762,47 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
+// Rechazar Pedido por un conductor y pasar al siguiente
+app.post("/api/orders/:id/reject", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Obtener pedido actual
+    const order = await prisma.order.findUnique({
+      where: { id }
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: "Pedido no encontrado" });
+    }
+
+    const queue = order.assignmentQueue ? order.assignmentQueue.split(',') : [];
+    const nextIndex = order.currentQueueIndex + 1;
+
+    let nextDriverId = null;
+    if (nextIndex < queue.length) {
+      nextDriverId = queue[nextIndex];
+    }
+
+    // Actualizar pedido en la BD
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: {
+        currentQueueIndex: nextIndex,
+        driverId: nextDriverId
+      }
+    });
+
+    res.json({
+      message: nextDriverId ? "Pedido reasignado al siguiente conductor" : "Cola de conductores agotada",
+      order: updatedOrder
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Actualizar Estado e Imagen
 app.patch("/api/orders/:id/status", upload.single('evidence'), async (req, res) => {
   const { id } = req.params;
