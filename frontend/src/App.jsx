@@ -742,6 +742,127 @@ function AppContent() {
         </div>
       </div>
       
+      {/* MODAL ALERTA DE NUEVO PEDIDO PARA EL CONDUCTOR */}
+      {activeDriverOffer && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 9999,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            width: '100%',
+            maxWidth: '500px',
+            padding: '25px',
+            border: '2px solid #D71920',
+            animation: 'fadeIn 0.3s ease'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{
+                fontSize: '3.5rem',
+                animation: 'pulse 1.5s infinite',
+                display: 'inline-block',
+                marginBottom: '10px'
+              }}>
+                🔔
+              </div>
+              <h3 style={{ margin: 0, color: '#D71920', fontSize: '1.4rem', fontWeight: 'bold' }}>
+                ¡Nuevo Pedido Disponible!
+              </h3>
+              <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '5px' }}>
+                Tienes un pedido asignado por cercanía esperando tu respuesta.
+              </p>
+            </div>
+
+            <div style={{
+              background: '#f8f9fa',
+              borderRadius: '10px',
+              padding: '15px',
+              marginBottom: '20px',
+              fontSize: '0.9rem',
+              color: '#333',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+              <div>🟢 <b>Origen:</b> {activeDriverOffer.originAddress}</div>
+              <div>🔴 <b>Destino:</b> {activeDriverOffer.destAddress}</div>
+              <div style={{
+                borderTop: '1px solid #eee',
+                paddingTop: '10px',
+                marginTop: '5px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontWeight: 'bold',
+                fontSize: '1.1rem',
+                color: '#16a34a'
+              }}>
+                <span>Tarifa Estimada:</span>
+                <span>S/ {activeDriverOffer.price?.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  const userData = JSON.parse(localStorage.getItem('user_data'));
+                  updateStatus(activeDriverOffer.id, 'ASIGNADO', userData?.id);
+                  toast.success("¡Pedido aceptado exitosamente!");
+                  setActiveDriverOffer(null);
+                }}
+                style={{
+                  flex: 1,
+                  background: '#16a34a',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '12px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.background = '#15803d'}
+                onMouseLeave={(e) => e.target.style.background = '#16a34a'}
+              >
+                Aceptar Viaje ✅
+              </button>
+
+              <button
+                onClick={() => handleRejectOffer(activeDriverOffer.id)}
+                style={{
+                  flex: 1,
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '12px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.background = '#b91c1c'}
+                onMouseLeave={(e) => e.target.style.background = '#ef4444'}
+              >
+                Rechazar ❌
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <Footer />
     </div>
   );
