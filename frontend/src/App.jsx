@@ -506,6 +506,53 @@ function AppContent() {
     }
   };
 
+  // Mostrar la ubicación real y en vivo del conductor en el mapa del cliente
+  useEffect(() => {
+    if (userRole !== 'client') return;
+
+    const orderId = trackedOrder?.id || lastCreatedOrder?.id;
+    if (!orderId) {
+      if (liveDriverMarker.current) { liveDriverMarker.current.remove(); liveDriverMarker.current = null; }
+      return;
+    }
+
+    const pollDriverLocation = async () => {
+      try {
+        const resOrder = await fetch(`http://localhost:3001/api/orders/${orderId}`);
+        if (!resOrder.ok) return;
+        const order = await resOrder.json();
+
+        const normalizedStatus = order.status ? order.status.toUpperCase().replace(/\s+/g, '_') : '';
+        const isTrackable = order.driverId && (normalizedStatus === 'ASIGNADO' || normalizedStatus === 'EN_CAMINO');
+        if (!isTrackable) {
+          if (liveDriverMarker.current) { liveDriverMarker.current.remove(); liveDriverMarker.current = null; }
+          return;
+        }
+
+        const resDriver = await fetch(`http://localhost:3001/api/drivers/${order.driverId}`);
+        if (!resDriver.ok) return;
+        const driver = await resDriver.json();
+        if (driver.latitude == null || driver.longitude == null || !map.current) return;
+
+        const coords = [driver.longitude, driver.latitude];
+        if (liveDriverMarker.current) {
+          liveDriverMarker.current.setLngLat(coords);
+        } else {
+          liveDriverMarker.current = new maplibregl.Marker({ color: '#2563eb' })
+            .setLngLat(coords)
+            .setPopup(new maplibregl.Popup({ offset: 20 }).setText('Conductor'))
+            .addTo(map.current);
+        }
+      } catch (err) {
+        console.error("Error consultando ubicación del conductor:", err);
+      }
+    };
+
+    pollDriverLocation();
+    const interval = setInterval(pollDriverLocation, 5000);
+    return () => clearInterval(interval);
+  }, [userRole, trackedOrder?.id, lastCreatedOrder?.id]);
+
   const startSimulation = () => {
     if (!routeGeoJSON || !routeGeoJSON.coordinates) {
         toast.warning("Primero debes ver una ruta en el mapa");
