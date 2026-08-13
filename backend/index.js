@@ -8,12 +8,34 @@ const fs = require("fs");
 const bcrypt = require("bcrypt");
 const PDFDocument = require("pdfkit");
 const nodemailer = require("nodemailer");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const prisma = new PrismaClient();
 
 app.use(cors());
 app.use(express.json());
+
+// ============ AUTENTICACIÓN CON JWT ============
+
+const JWT_SECRET = process.env.JWT_SECRET || "urbsend_dev_secret_change_in_production";
+
+function generateToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+}
+
+// Middleware: exige un token válido y expone el usuario en req.user ({ id, role })
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Token no proporcionado" });
+
+  jwt.verify(token, JWT_SECRET, (err, payload) => {
+    if (err) return res.status(403).json({ error: "Token inválido o expirado" });
+    req.user = payload;
+    next();
+  });
+}
 
 // ============ CONFIGURACIÓN DE NOTIFICACIONES ============
 
@@ -426,8 +448,11 @@ app.post("/api/login/client", async (req, res) => {
       return res.status(401).json({ error: "Credenciales incorrectas" });
     }
 
+    const token = generateToken({ id: user.id, role: "client" });
+
     res.json({
       message: "Login exitoso",
+      token,
       user: {
         id: user.id,
         name: user.name,
@@ -461,8 +486,11 @@ app.post("/api/login/driver", async (req, res) => {
       return res.status(401).json({ error: "Credenciales incorrectas" });
     }
 
+    const token = generateToken({ id: driver.id, role: "driver" });
+
     res.json({
       message: "Login exitoso",
+      token,
       user: {
         id: driver.id,
         name: driver.name,
