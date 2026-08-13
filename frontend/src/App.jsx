@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import maplibregl from 'maplibre-gl';
 import * as turf from '@turf/turf';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -51,6 +51,7 @@ function ProtectedRoute({ children, allowedRoles, userRole }) {
 
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
   const toast = useToast();
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -907,10 +908,14 @@ function AppContent() {
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onClick={() => {
+                onClick={async () => {
                   const userData = JSON.parse(localStorage.getItem('user_data'));
-                  updateStatus(activeDriverOffer.id, 'ASIGNADO', userData?.id);
+                  const acceptedOrder = { ...activeDriverOffer, status: 'ASIGNADO' };
+                  await updateStatus(acceptedOrder.id, 'ASIGNADO', userData?.id);
                   toast.success("¡Pedido aceptado exitosamente!");
+                  navigate('/driver');
+                  // Esperar a que el efecto de cambio de ruta limpie el mapa antes de dibujar
+                  setTimeout(() => visualizeOrderOnMap(acceptedOrder), 100);
                   setActiveDriverOffer(null);
                 }}
                 style={{
