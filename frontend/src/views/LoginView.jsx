@@ -38,8 +38,9 @@ export default function LoginView({ onLogin }) {
       if (response.ok) {
         const data = await response.json();
 
-        // Guardar información del usuario
+        // Guardar información del usuario y su token de autenticación
         localStorage.setItem('user_data', JSON.stringify(data.user));
+        if (data.token) localStorage.setItem('urbsend_token', data.token);
 
         onLogin(role);
         toast.success(`¡Bienvenido ${data.user.name}!`);

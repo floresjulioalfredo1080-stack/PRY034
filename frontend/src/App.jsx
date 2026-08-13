@@ -73,7 +73,17 @@ function AppContent() {
   const handleLogout = () => {
     setUserRole(null);
     localStorage.removeItem('urbsend_user_role');
+    localStorage.removeItem('urbsend_token');
     window.location.href = '/';
+  };
+
+  // Fetch autenticado: agrega el token JWT (si existe) a las peticiones
+  // que necesitan identificar al usuario logueado en el backend.
+  const authFetch = (url, options = {}) => {
+    const token = localStorage.getItem('urbsend_token');
+    const headers = { ...(options.headers || {}) };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return fetch(url, { ...options, headers });
   };
 
   // ============ ESTADOS DE LA APLICACIÓN ============
@@ -182,7 +192,7 @@ function AppContent() {
 
   const handleRejectOffer = async (orderId) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/orders/${orderId}/reject`, {
+      const res = await authFetch(`http://localhost:3001/api/orders/${orderId}/reject`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -250,7 +260,7 @@ function AppContent() {
       if (now - lastSentAt < MIN_INTERVAL_MS) return;
       lastSentAt = now;
       const { latitude, longitude } = position.coords;
-      fetch(`http://localhost:3001/api/drivers/${driverId}/location`, {
+      authFetch(`http://localhost:3001/api/drivers/${driverId}/location`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ latitude, longitude })
