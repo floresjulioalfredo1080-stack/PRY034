@@ -9,12 +9,44 @@ const bcrypt = require("bcrypt");
 const PDFDocument = require("pdfkit");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
 const prisma = new PrismaClient();
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: { origin: "*" }
+});
 
 app.use(cors());
 app.use(express.json());
+
+// ============ SOCKET.IO (TIEMPO REAL) ============
+// Salas:
+//  - driver:<driverId>  -> el conductor se une para recibir nuevas ofertas de
+//                          pedido; los clientes que rastrean un pedido de ese
+//                          conductor también se unen para recibir su ubicación.
+//  - order:<orderId>    -> los clientes se unen mientras rastrean un pedido,
+//                          para recibir sus cambios de estado en vivo.
+io.on("connection", (socket) => {
+  socket.on("join-driver-room", (driverId) => {
+    if (driverId) socket.join(`driver:${driverId}`);
+  });
+
+  socket.on("join-order-room", (orderId) => {
+    if (orderId) socket.join(`order:${orderId}`);
+  });
+
+  socket.on("leave-order-room", (orderId) => {
+    if (orderId) socket.leave(`order:${orderId}`);
+  });
+
+  socket.on("driver-location", ({ driverId, latitude, longitude }) => {
+    if (!driverId) return;
+    io.to(`driver:${driverId}`).emit("driver-location-update", { driverId, latitude, longitude });
+  });
+});
 
 // ============ AUTENTICACIÓN CON JWT ============
 
@@ -1227,6 +1259,6 @@ app.get("/api/orders/:id/invoice", async (req, res) => {
   }
 });
 
-app.listen(3001, () => {
-  console.log("🚀 BACKEND COMPLETO (Autenticación + Historial + Ganancias + Facturación) en http://localhost:3001");
+httpServer.listen(3001, () => {
+  console.log("🚀 BACKEND COMPLETO (Autenticación + Historial + Ganancias + Facturación + Tiempo Real) en http://localhost:3001");
 });
