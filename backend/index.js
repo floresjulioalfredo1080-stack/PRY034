@@ -658,13 +658,23 @@ app.get("/api/seed-drivers", async (req, res) => {
 // Listar Conductores (SOLO VERIFICADOS)
 app.get("/api/drivers", async (req, res) => {
   try {
-    const drivers = await prisma.driver.findMany({ 
-      where: { 
+    const drivers = await prisma.driver.findMany({
+      where: {
         isOnline: true,
-        isVerified: true 
-      } 
+        isVerified: true
+      }
     });
     res.json(drivers);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Obtener un conductor por ID (usado para rastrear su ubicación en vivo)
+app.get("/api/drivers/:id", async (req, res) => {
+  try {
+    const driver = await prisma.driver.findUnique({ where: { id: req.params.id } });
+    if (!driver) return res.status(404).json({ error: "Conductor no encontrado" });
+    const { password, ...safeDriver } = driver;
+    res.json(safeDriver);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
