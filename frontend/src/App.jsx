@@ -434,8 +434,8 @@ function AppContent() {
     clearMap();
     const startPoint = { lng: order.originLng, lat: order.originLat };
     const endPoint = { lng: order.destLng, lat: order.destLat };
-    addMarker([startPoint.lng, startPoint.lat], '#16a34a');
-    addMarker([endPoint.lng, endPoint.lat], '#dc2626');
+    setOriginMarker([startPoint.lng, startPoint.lat]);
+    setDestinationMarker([endPoint.lng, endPoint.lat]);
     
     if (map.current) {
         const bounds = new maplibregl.LngLatBounds([startPoint.lng, startPoint.lat], [endPoint.lng, endPoint.lat]);
