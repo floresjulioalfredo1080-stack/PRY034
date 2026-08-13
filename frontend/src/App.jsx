@@ -540,7 +540,8 @@ function AppContent() {
     }
   };
 
-  // Mostrar la ubicación real y en vivo del conductor en el mapa del cliente
+  // Mostrar la ubicación real y en vivo del conductor en el mapa del cliente,
+  // y mantener el estado del pedido al día, todo vía socket en vez de polling.
   useEffect(() => {
     if (userRole !== 'client') return;
 
@@ -550,41 +551,76 @@ function AppContent() {
       return;
     }
 
-    const pollDriverLocation = async () => {
-      try {
-        const resOrder = await fetch(`http://localhost:3001/api/orders/${orderId}`);
-        if (!resOrder.ok) return;
-        const order = await resOrder.json();
+    const socket = socketRef.current;
+    if (!socket) return;
 
-        const normalizedStatus = order.status ? order.status.toUpperCase().replace(/\s+/g, '_') : '';
-        const isTrackable = order.driverId && (normalizedStatus === 'ASIGNADO' || normalizedStatus === 'EN_CAMINO');
-        if (!isTrackable) {
-          if (liveDriverMarker.current) { liveDriverMarker.current.remove(); liveDriverMarker.current = null; }
-          return;
-        }
+    let currentDriverId = null;
 
-        const resDriver = await fetch(`http://localhost:3001/api/drivers/${order.driverId}`);
-        if (!resDriver.ok) return;
-        const driver = await resDriver.json();
-        if (driver.latitude == null || driver.longitude == null || !map.current) return;
-
-        const coords = [driver.longitude, driver.latitude];
-        if (liveDriverMarker.current) {
-          liveDriverMarker.current.setLngLat(coords);
-        } else {
-          liveDriverMarker.current = new maplibregl.Marker({ color: '#2563eb' })
-            .setLngLat(coords)
-            .setPopup(new maplibregl.Popup({ offset: 20 }).setText('Conductor'))
-            .addTo(map.current);
-        }
-      } catch (err) {
-        console.error("Error consultando ubicación del conductor:", err);
+    const updateDriverMarker = (latitude, longitude) => {
+      if (latitude == null || longitude == null || !map.current) return;
+      const coords = [longitude, latitude];
+      if (liveDriverMarker.current) {
+        liveDriverMarker.current.setLngLat(coords);
+      } else {
+        liveDriverMarker.current = new maplibregl.Marker({ color: '#2563eb' })
+          .setLngLat(coords)
+          .setPopup(new maplibregl.Popup({ offset: 20 }).setText('Conductor'))
+          .addTo(map.current);
       }
     };
 
-    pollDriverLocation();
-    const interval = setInterval(pollDriverLocation, 5000);
-    return () => clearInterval(interval);
+    const applyOrderState = async (order) => {
+      const normalizedStatus = order.status ? order.status.toUpperCase().replace(/\s+/g, '_') : '';
+      const isTrackable = order.driverId && (normalizedStatus === 'ASIGNADO' || normalizedStatus === 'EN_CAMINO');
+
+      if (!isTrackable) {
+        currentDriverId = null;
+        if (liveDriverMarker.current) { liveDriverMarker.current.remove(); liveDriverMarker.current = null; }
+        return;
+      }
+
+      if (order.driverId !== currentDriverId) {
+        currentDriverId = order.driverId;
+        socket.emit('join-driver-room', currentDriverId);
+        try {
+          const resDriver = await fetch(`http://localhost:3001/api/drivers/${currentDriverId}`);
+          if (resDriver.ok) {
+            const driver = await resDriver.json();
+            updateDriverMarker(driver.latitude, driver.longitude);
+          }
+        } catch (err) {
+          console.error("Error consultando ubicación del conductor:", err);
+        }
+      }
+    };
+
+    const onOrderUpdated = (order) => {
+      if (order.id !== orderId) return;
+      if (trackedOrder?.id === orderId) setTrackedOrder(order);
+      if (lastCreatedOrder?.id === orderId) setLastCreatedOrder(order);
+      applyOrderState(order);
+    };
+
+    const onDriverLocationUpdate = ({ driverId, latitude, longitude }) => {
+      if (driverId !== currentDriverId) return;
+      updateDriverMarker(latitude, longitude);
+    };
+
+    socket.emit('join-order-room', orderId);
+    socket.on('order-updated', onOrderUpdated);
+    socket.on('driver-location-update', onDriverLocationUpdate);
+
+    // Estado inicial del pedido, para no depender del primer evento por socket
+    fetch(`http://localhost:3001/api/orders/${orderId}`)
+      .then(res => (res.ok ? res.json() : null))
+      .then(order => { if (order) applyOrderState(order); })
+      .catch(err => console.error("Error consultando pedido:", err));
+
+    return () => {
+      socket.emit('leave-order-room', orderId);
+      socket.off('order-updated', onOrderUpdated);
+      socket.off('driver-location-update', onDriverLocationUpdate);
+    };
   }, [userRole, trackedOrder?.id, lastCreatedOrder?.id]);
 
   const startSimulation = () => {
