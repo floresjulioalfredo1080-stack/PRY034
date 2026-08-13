@@ -696,19 +696,33 @@ app.get("/api/drivers", async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Obtener un conductor por ID (usado para rastrear su ubicación en vivo)
+// Obtener un conductor por ID (usado para rastrear su ubicación en vivo).
+// Se exponen solo los campos necesarios para el tracking público, sin datos
+// de contacto del conductor (email, teléfono, documentos).
 app.get("/api/drivers/:id", async (req, res) => {
   try {
     const driver = await prisma.driver.findUnique({ where: { id: req.params.id } });
     if (!driver) return res.status(404).json({ error: "Conductor no encontrado" });
-    const { password, ...safeDriver } = driver;
-    res.json(safeDriver);
+    res.json({
+      id: driver.id,
+      name: driver.name,
+      vehicleType: driver.vehicleType,
+      vehiclePlate: driver.vehiclePlate,
+      rating: driver.rating,
+      latitude: driver.latitude,
+      longitude: driver.longitude
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Actualizar la ubicación GPS en vivo de un conductor
-app.patch("/api/drivers/:id/location", async (req, res) => {
+// Actualizar la ubicación GPS en vivo de un conductor.
+// Requiere JWT válido y que el token pertenezca a ese mismo conductor,
+// para que nadie pueda falsificar la posición de otro conductor.
+app.patch("/api/drivers/:id/location", authenticateToken, async (req, res) => {
   try {
+    if (req.user.role !== 'driver' || req.user.id !== req.params.id) {
+      return res.status(403).json({ error: "No autorizado para actualizar esta ubicación" });
+    }
     const { latitude, longitude } = req.body;
     if (typeof latitude !== 'number' || typeof longitude !== 'number') {
       return res.status(400).json({ error: "latitude y longitude deben ser números" });
@@ -816,7 +830,7 @@ app.post("/api/orders", async (req, res) => {
 });
 
 // Rechazar Pedido por un conductor y pasar al siguiente
-app.post("/api/orders/:id/reject", async (req, res) => {
+app.post("/api/orders/:id/reject", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -827,6 +841,10 @@ app.post("/api/orders/:id/reject", async (req, res) => {
 
     if (!order) {
       return res.status(404).json({ error: "Pedido no encontrado" });
+    }
+
+    if (req.user.role !== 'driver' || req.user.id !== order.driverId) {
+      return res.status(403).json({ error: "No autorizado para rechazar este pedido" });
     }
 
     const queue = order.assignmentQueue ? order.assignmentQueue.split(',') : [];
