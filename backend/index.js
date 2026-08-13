@@ -864,14 +864,15 @@ app.get("/api/users/:userId/orders", async (req, res) => {
   }
 });
 
-// PEDIDOS DE UN CONDUCTOR (para ganancias)
+// PEDIDOS DE UN CONDUCTOR (por defecto: ofertas pendientes de aceptar/rechazar)
 app.get("/api/drivers/:driverId/orders", async (req, res) => {
   try {
     const { driverId } = req.params;
+    const { status } = req.query;
     const orders = await prisma.order.findMany({
-      where: { 
+      where: {
         driverId,
-        status: 'ENTREGADO'
+        status: status || 'PENDIENTE'
       },
       orderBy: { createdAt: 'desc' }
     });
