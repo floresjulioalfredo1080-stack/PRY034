@@ -2,7 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import maplibregl from 'maplibre-gl';
 import * as turf from '@turf/turf';
+import { io } from 'socket.io-client';
 import 'maplibre-gl/dist/maplibre-gl.css';
+
+const SOCKET_URL = 'http://localhost:3001';
 
 // Componentes
 import Navbar from './components/Navbar';
@@ -58,7 +61,15 @@ function AppContent() {
   const markers = useRef([]);
   const driverMarker = useRef(null);
   const liveDriverMarker = useRef(null);
+  const socketRef = useRef(null);
   const routeLayerId = 'route';
+
+  // Conexión Socket.io compartida por toda la app, para ofertas de pedidos,
+  // cambios de estado y ubicación del conductor en tiempo real.
+  useEffect(() => {
+    socketRef.current = io(SOCKET_URL);
+    return () => socketRef.current.disconnect();
+  }, []);
 
   // ============ ESTADOS DE AUTENTICACIÓN ============
   const [userRole, setUserRole] = useState(() => {
@@ -213,18 +224,21 @@ function AppContent() {
     fetchAdminData();
   }, []);
 
+  // Ofertas de pedido para el conductor: una consulta inicial para no
+  // perderse una oferta que ya existía al entrar, y luego el socket avisa
+  // en tiempo real de las nuevas (reemplaza el polling cada 3s).
   useEffect(() => {
     if (userRole !== 'driver') {
       setActiveDriverOffer(null);
       return;
     }
 
-    const checkDriverOffer = async () => {
-      try {
-        const userData = JSON.parse(localStorage.getItem('user_data'));
-        const driverId = userData?.id;
-        if (!driverId) return;
+    const userData = JSON.parse(localStorage.getItem('user_data'));
+    const driverId = userData?.id;
+    if (!driverId) return;
 
+    const fetchExistingOffer = async () => {
+      try {
         const res = await fetch(`http://localhost:3001/api/drivers/${driverId}/orders`);
         if (res.ok) {
           const orders = await res.json();
@@ -235,16 +249,22 @@ function AppContent() {
           setActiveDriverOffer(pendingOffer || null);
         }
       } catch (err) {
-        console.error("Error polling driver offer:", err);
+        console.error("Error consultando ofertas pendientes:", err);
       }
     };
+    fetchExistingOffer();
 
-    checkDriverOffer();
-    const interval = setInterval(checkDriverOffer, 3000);
-    return () => clearInterval(interval);
+    const socket = socketRef.current;
+    if (!socket) return;
+    socket.emit('join-driver-room', driverId);
+    const onNewOffer = (order) => setActiveDriverOffer(order);
+    socket.on('new-order-offer', onNewOffer);
+
+    return () => socket.off('new-order-offer', onNewOffer);
   }, [userRole]);
 
-  // Enviar la ubicación GPS real del conductor al backend periódicamente
+  // Enviar la ubicación GPS real del conductor: se persiste vía API (con JWT)
+  // y se transmite por socket para que quien lo esté rastreando la vea al instante.
   useEffect(() => {
     if (userRole !== 'driver' || !navigator.geolocation) return;
 
@@ -260,11 +280,14 @@ function AppContent() {
       if (now - lastSentAt < MIN_INTERVAL_MS) return;
       lastSentAt = now;
       const { latitude, longitude } = position.coords;
+
       authFetch(`http://localhost:3001/api/drivers/${driverId}/location`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ latitude, longitude })
       }).catch(err => console.error("Error enviando ubicación:", err));
+
+      socketRef.current?.emit('driver-location', { driverId, latitude, longitude });
     };
 
     const watchId = navigator.geolocation.watchPosition(
