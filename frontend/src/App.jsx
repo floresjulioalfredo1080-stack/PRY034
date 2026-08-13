@@ -56,7 +56,8 @@ function AppContent() {
   const map = useRef(null);
   const markers = useRef([]);
   const driverMarker = useRef(null);
-  const routeLayerId = 'route'; 
+  const liveDriverMarker = useRef(null);
+  const routeLayerId = 'route';
 
   // ============ ESTADOS DE AUTENTICACIÓN ============
   const [userRole, setUserRole] = useState(() => {
@@ -251,9 +252,10 @@ function AppContent() {
     if (!map.current) return;
     if (originMarker.current) { originMarker.current.remove(); originMarker.current = null; }
     if (destinationMarker.current) { destinationMarker.current.remove(); destinationMarker.current = null; }
-    markers.current.forEach(m => m.remove()); 
+    markers.current.forEach(m => m.remove());
     markers.current = [];
-    if (driverMarker.current) driverMarker.current.remove();
+    if (driverMarker.current) { driverMarker.current.remove(); driverMarker.current = null; }
+    if (liveDriverMarker.current) { liveDriverMarker.current.remove(); liveDriverMarker.current = null; }
     if (map.current.getLayer(routeLayerId)) map.current.removeLayer(routeLayerId);
     if (map.current.getSource(routeLayerId)) map.current.removeSource(routeLayerId);
   };
