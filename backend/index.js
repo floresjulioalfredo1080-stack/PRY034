@@ -678,6 +678,21 @@ app.get("/api/drivers/:id", async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Actualizar la ubicación GPS en vivo de un conductor
+app.patch("/api/drivers/:id/location", async (req, res) => {
+  try {
+    const { latitude, longitude } = req.body;
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+      return res.status(400).json({ error: "latitude y longitude deben ser números" });
+    }
+    const driver = await prisma.driver.update({
+      where: { id: req.params.id },
+      data: { latitude, longitude }
+    });
+    res.json({ id: driver.id, latitude: driver.latitude, longitude: driver.longitude });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // Listar Pedidos
 app.get("/api/orders", async (req, res) => {
   try {
