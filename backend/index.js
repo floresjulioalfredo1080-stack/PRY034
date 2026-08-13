@@ -854,6 +854,11 @@ app.post("/api/orders", async (req, res) => {
       console.error('Error enviando notificación de creación:', err);
     });
 
+    // 🔴 Avisar en tiempo real al conductor más cercano
+    if (initialDriverId) {
+      io.to(`driver:${initialDriverId}`).emit('new-order-offer', order);
+    }
+
     res.status(201).json(order);
   } catch (err) {
     console.error(err);
@@ -895,6 +900,12 @@ app.post("/api/orders/:id/reject", authenticateToken, async (req, res) => {
         driverId: nextDriverId
       }
     });
+
+    // 🔴 Avisar en tiempo real al siguiente conductor de la cola y a quien esté rastreando el pedido
+    if (nextDriverId) {
+      io.to(`driver:${nextDriverId}`).emit('new-order-offer', updatedOrder);
+    }
+    io.to(`order:${id}`).emit('order-updated', updatedOrder);
 
     res.json({
       message: nextDriverId ? "Pedido reasignado al siguiente conductor" : "Cola de conductores agotada",
@@ -942,6 +953,9 @@ app.patch("/api/orders/:id/status", upload.single('evidence'), async (req, res) 
         console.error('Error enviando notificación de entrega:', err);
       });
     }
+
+    // 🔴 Avisar en tiempo real a quien esté rastreando este pedido
+    io.to(`order:${id}`).emit('order-updated', updatedOrder);
 
     res.json(updatedOrder);
   } catch (err) {
