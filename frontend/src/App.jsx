@@ -233,6 +233,38 @@ function AppContent() {
     return () => clearInterval(interval);
   }, [userRole]);
 
+  // Enviar la ubicación GPS real del conductor al backend periódicamente
+  useEffect(() => {
+    if (userRole !== 'driver' || !navigator.geolocation) return;
+
+    const userData = JSON.parse(localStorage.getItem('user_data'));
+    const driverId = userData?.id;
+    if (!driverId) return;
+
+    let lastSentAt = 0;
+    const MIN_INTERVAL_MS = 5000;
+
+    const sendLocation = (position) => {
+      const now = Date.now();
+      if (now - lastSentAt < MIN_INTERVAL_MS) return;
+      lastSentAt = now;
+      const { latitude, longitude } = position.coords;
+      fetch(`http://localhost:3001/api/drivers/${driverId}/location`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ latitude, longitude })
+      }).catch(err => console.error("Error enviando ubicación:", err));
+    };
+
+    const watchId = navigator.geolocation.watchPosition(
+      sendLocation,
+      (err) => console.error("Error de geolocalización:", err),
+      { enableHighAccuracy: true, maximumAge: 4000, timeout: 10000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [userRole]);
+
   // --- FUNCIONES DEL MAPA ---
   const setOriginMarker = (coords) => {
     if (originMarker.current) originMarker.current.remove();
