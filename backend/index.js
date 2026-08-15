@@ -781,7 +781,10 @@ app.get("/api/orders", async (req, res) => {
 // Buscar un pedido
 app.get("/api/orders/:id", async (req, res) => {
   try {
-    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
+    const order = await prisma.order.findUnique({
+      where: { id: req.params.id },
+      include: { statusHistory: { orderBy: { createdAt: 'asc' } } }
+    });
     if (!order) return res.status(404).json({ error: "Pedido no encontrado" });
     res.json(order);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -845,8 +848,10 @@ app.post("/api/orders", async (req, res) => {
         paymentMethod: paymentMethod || "Efectivo",
         assignmentQueue: queueString,
         currentQueueIndex: 0,
-        driverId: initialDriverId
+        driverId: initialDriverId,
+        statusHistory: { create: { status: "PENDIENTE" } }
       },
+      include: { statusHistory: true }
     });
 
     // 📬 Enviar notificación de pedido creado
@@ -934,7 +939,11 @@ app.patch("/api/orders/:id/status", upload.single('evidence'), async (req, res) 
   try {
     const updatedOrder = await prisma.order.update({
       where: { id: id },
-      data: updateData
+      data: {
+        ...updateData,
+        statusHistory: { create: { status } }
+      },
+      include: { statusHistory: { orderBy: { createdAt: 'asc' } } }
     });
 
     // 📬 Enviar notificación según el nuevo estado

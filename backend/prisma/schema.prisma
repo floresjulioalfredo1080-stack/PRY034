@@ -86,8 +86,22 @@ model Order {
   
   // Evidencia
   proofImage      String?
-  
+
   // Fechas
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  // Historial de estados, para la línea de tiempo del tracking
+  statusHistory   OrderStatusHistory[]
+}
+
+// ============ HISTORIAL DE ESTADOS DE UN PEDIDO ============
+// Un registro por cada vez que el pedido cambia de estado, para poder
+// mostrar la fecha/hora real de cada etapa en la página de rastreo.
+model OrderStatusHistory {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  createdAt DateTime @default(now())
 }
