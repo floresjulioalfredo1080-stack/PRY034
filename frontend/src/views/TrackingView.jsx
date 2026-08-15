@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, MapPin, MessageCircle, Share2 } from 'lucide-react';
+import OrderTimeline from '../components/OrderTimeline';
 
 export default function TrackingView({ trackId, setTrackId, handleTrackOrder, trackedOrder, startSimulation }) {
   const [searchParams] = useSearchParams();
@@ -63,6 +64,8 @@ export default function TrackingView({ trackId, setTrackId, handleTrackOrder, tr
                <div style={{marginBottom: '8px'}}>📍 <b>Origen:</b> {trackedOrder.originAddress}</div>
                <div>🏁 <b>Destino:</b> {trackedOrder.destAddress}</div>
             </div>
+
+            <OrderTimeline order={trackedOrder} />
 
             {isEnRoute && (
               <button className="btn-primary" style={{background: '#8b5cf6'}} onClick={startSimulation}>

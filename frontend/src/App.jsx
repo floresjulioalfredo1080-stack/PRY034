@@ -542,8 +542,11 @@ function AppContent() {
 
   // Mostrar la ubicación real y en vivo del conductor en el mapa del cliente,
   // y mantener el estado del pedido al día, todo vía socket en vez de polling.
+  // La página de rastreo es pública (sin login), así que esto debe funcionar
+  // tanto para un cliente logueado como para un visitante anónimo con el ID
+  // del pedido; solo se excluye a conductor/admin, que usan el mapa distinto.
   useEffect(() => {
-    if (userRole !== 'client') return;
+    if (userRole === 'driver' || userRole === 'admin') return;
 
     const orderId = trackedOrder?.id || lastCreatedOrder?.id;
     if (!orderId) {
