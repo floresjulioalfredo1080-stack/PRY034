@@ -20,8 +20,9 @@ export default function TrackingView({ trackId, setTrackId, handleTrackOrder, tr
 
   return (
     <div style={{ width: '100%' }}>
+      <img src="/logo.svg" alt="URBSEND" style={{ height: '22px', width: 'auto', marginBottom: '15px' }} />
       <h2>Rastrear Pedido 🛰️</h2>
-      
+
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
         <input 
             placeholder="Ingresa ID del pedido..." 

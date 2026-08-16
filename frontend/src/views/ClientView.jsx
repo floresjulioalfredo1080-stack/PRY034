@@ -221,6 +221,7 @@ export default function ClientView({
   // FORMULARIO NORMAL - RESPONSIVE
   return (
     <div style={{ width: '100%' }}>
+      <img src="/logo.svg" alt="URBSEND" style={{ height: '22px', width: 'auto', marginBottom: '15px' }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <h2 style={{ fontSize: 'clamp(1.1rem, 3.5vw, 1.4rem)', margin: 0 }}>
           📦 Cotizar Envío

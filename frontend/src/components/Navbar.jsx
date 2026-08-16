@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Navigation, ShoppingCart, User, Menu, X, LogOut,
+  User, Menu, X, LogOut,
   MapPin, Package, FileText, Users, TrendingUp, Settings,
   Truck, Shield, Clock, Bell
 } from 'lucide-react';
@@ -50,16 +50,12 @@ export default function Navbar({ userRole, onLogout }) {
             <span className="hide-mobile" style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>MENÚ</span>
           </button>
 
-          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Navigation size={28} color="white" strokeWidth={2.5}/>
-            <span style={{
-              fontSize: 'clamp(1.2rem, 4vw, 1.8rem)',
-              fontWeight: '900',
-              color: 'white',
-              letterSpacing: '1px'
-            }}>
-              URBSEND
-            </span>
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <img
+              src="/logo-white.svg"
+              alt="URBSEND"
+              style={{ height: 'clamp(26px, 5vw, 34px)', width: 'auto' }}
+            />
           </Link>
         </div>
 

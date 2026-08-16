@@ -21,14 +21,9 @@ export default function Footer() {
 
         {/* Columna 1: Marca */}
         <div>
-          <h3 style={{
-            fontSize: 'clamp(1.1rem, 3vw, 1.3rem)',
-            fontWeight: '800',
-            marginBottom: '10px',
-            color: 'white'
-          }}>
-            URBSEND<span style={{ color: '#D71920' }}>.</span>
-          </h3>
+          <Link to="/" style={{ display: 'inline-block', marginBottom: '10px' }}>
+            <img src="/logo-white.svg" alt="URBSEND" style={{ height: '28px', width: 'auto' }} />
+          </Link>
           <p style={{
             color: '#94a3b8',
             fontSize: 'clamp(0.75rem, 2vw, 0.85rem)',
