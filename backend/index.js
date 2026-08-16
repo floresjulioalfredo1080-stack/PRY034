@@ -11,6 +11,7 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const http = require("http");
 const { Server } = require("socket.io");
+const { createPaymentToken, confirmPayment } = require("./izipay");
 
 const app = express();
 const prisma = new PrismaClient();
@@ -869,6 +870,63 @@ app.post("/api/orders", async (req, res) => {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
+});
+
+// ============ PASARELA DE PAGO (IZIPAY — simulada, ver backend/izipay.js) ============
+
+// Genera el token de pago para un pedido ya creado (paso previo al checkout
+// embebido de IZIPAY).
+app.post("/api/payments/izipay/create-token", async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) return res.status(404).json({ error: "Pedido no encontrado" });
+
+    const tokenData = createPaymentToken({ orderId: order.id, amount: order.price });
+    res.json(tokenData);
+  } catch (err) {
+    console.error('Error creando token de pago IZIPAY:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Confirma el resultado del pago y actualiza paymentStatus del pedido.
+// `simulateResult` solo existe para poder probar éxito/fallo desde la
+// simulación; en la integración real ese resultado vendría del webhook de
+// IZIPAY (ver /api/payments/izipay/webhook), no del cliente.
+app.post("/api/payments/izipay/confirm", async (req, res) => {
+  try {
+    const { orderId, formToken, simulateResult } = req.body;
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) return res.status(404).json({ error: "Pedido no encontrado" });
+
+    const result = confirmPayment({ formToken, simulateResult });
+    const paymentStatus = result.success ? 'PAGADO' : 'FALLIDO';
+
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: { paymentStatus },
+      include: { statusHistory: { orderBy: { createdAt: 'asc' } } }
+    });
+
+    // 🔴 Avisar en tiempo real a quien esté rastreando este pedido
+    io.to(`order:${orderId}`).emit('order-updated', updatedOrder);
+
+    res.json({ ...result, paymentStatus, order: updatedOrder });
+  } catch (err) {
+    console.error('Error confirmando pago IZIPAY:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Stub del webhook real de IZIPAY: en producción, IZIPAY llama esta URL de
+// forma asíncrona (independiente del navegador del cliente) para confirmar
+// el pago. TODO al activar la integración real: verificar la firma del
+// payload con la clave privada antes de confiar en el contenido (ver
+// README.md → "Pasarela de pago (IZIPAY)").
+app.post("/api/payments/izipay/webhook", async (req, res) => {
+  console.log('📩 [IZIPAY webhook — integración real pendiente]', req.body);
+  res.status(200).json({ received: true });
 });
 
 // Rechazar Pedido por un conductor y pasar al siguiente

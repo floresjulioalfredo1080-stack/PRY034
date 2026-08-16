@@ -76,7 +76,8 @@ model Order {
   urgency         Boolean  @default(false)
   price           Float
   paymentMethod   String?  @default("Efectivo")
-  
+  paymentStatus   String   @default("PENDIENTE") // PENDIENTE, PAGADO, FALLIDO (solo aplica a pagos con Tarjeta/IZIPAY)
+
   // Estado y asignación
   status          String   @default("PENDIENTE") // PENDIENTE, ASIGNADO, EN_CAMINO, ENTREGADO, CANCELADO
   driverId        String?
