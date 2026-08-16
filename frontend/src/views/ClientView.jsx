@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, MapPin, CheckCircle, Copy, ArrowRight, Zap, Clock, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/Toast';
+import IzipayCheckoutModal from '../components/IzipayCheckoutModal';
 
 export default function ClientView({
   origin, destination, distance, price,
@@ -15,6 +16,7 @@ export default function ClientView({
 }) {
   const navigate = useNavigate();
   const toast = useToast();
+  const [showIzipayModal, setShowIzipayModal] = useState(false);
 
   // FUNCIÓN MEJORADA: Crear pedido con userId
   const handleSubmit = async () => {
@@ -47,7 +49,12 @@ export default function ClientView({
       if (response.ok) {
         const newOrder = await response.json();
         setLastCreatedOrder(newOrder);
-        toast.success("¡Pedido creado exitosamente!");
+        if (paymentMethod === 'Tarjeta') {
+          // El pago con Tarjeta pasa por el checkout de IZIPAY antes de avisar éxito
+          setShowIzipayModal(true);
+        } else {
+          toast.success("¡Pedido creado exitosamente!");
+        }
       } else {
         toast.error('Error al crear el pedido');
       }
@@ -60,6 +67,19 @@ export default function ClientView({
   // SI HAY UN PEDIDO CREADO, MOSTRAMOS LA PANTALLA DE ÉXITO
   if (lastCreatedOrder) {
     return (
+      <>
+      {showIzipayModal && (
+        <IzipayCheckoutModal
+          order={lastCreatedOrder}
+          onClose={() => setShowIzipayModal(false)}
+          onPaid={(updatedOrder) => {
+            // No cerramos el modal aquí: lo cierra el usuario con "Continuar",
+            // así alcanza a ver la confirmación de pago aprobado.
+            setLastCreatedOrder(updatedOrder);
+            toast.success("¡Pago aprobado y pedido confirmado!");
+          }}
+        />
+      )}
       <div style={{
         width: '100%',
         height: '100%',
@@ -80,11 +100,23 @@ export default function ClientView({
         </h2>
         <p style={{
           color: '#666',
-          marginBottom: '25px',
+          marginBottom: '15px',
           fontSize: 'clamp(0.85rem, 2.5vw, 1rem)'
         }}>
           Tu solicitud ha sido enviada a nuestros conductores.
         </p>
+
+        {lastCreatedOrder.paymentMethod === 'Tarjeta' && (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            marginBottom: '20px', padding: '5px 12px', borderRadius: '20px',
+            fontSize: '0.75rem', fontWeight: 'bold',
+            background: lastCreatedOrder.paymentStatus === 'PAGADO' ? '#dcfce7' : '#fef3c7',
+            color: lastCreatedOrder.paymentStatus === 'PAGADO' ? '#166534' : '#92400e'
+          }}>
+            {lastCreatedOrder.paymentStatus === 'PAGADO' ? '✔ Pago confirmado (IZIPAY)' : '⏳ Pago pendiente de confirmación'}
+          </span>
+        )}
 
         <div className="info-card" style={{
           width: '100%',
@@ -215,6 +247,7 @@ export default function ClientView({
           Crear otro envío
         </button>
       </div>
+      </>
     );
   }
 
