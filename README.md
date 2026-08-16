@@ -382,6 +382,27 @@ PENDIENTE → ASIGNADO → EN_CAMINO → ENTREGADO
 
 ---
 
+## 💳 Pasarela de Pago (IZIPAY)
+
+El método de pago **Tarjeta** pasa por un checkout de IZIPAY, pero **hoy está simulado**: no contamos todavía con credenciales de sandbox, así que `backend/izipay.js` imita el flujo real (token → procesar → confirmar) sin llamar a los servidores de IZIPAY. Efectivo y Yape no pasan por esta pasarela — se siguen cobrando fuera del sistema, como hasta ahora.
+
+**Qué es real y qué es simulado:**
+- ✅ Real: el modelo de datos (`Order.paymentStatus`), los endpoints, el evento de socket que avisa en vivo cuando cambia el estado del pago, y la estructura completa del flujo.
+- 🧪 Simulado: el propio pago — `backend/izipay.js` genera un token falso y deja que el usuario elija manualmente si el pago "sale bien" o "sale mal", en vez de que la respuesta venga de IZIPAY.
+
+### Pasos para activar la integración real
+
+1. **Obtener credenciales de sandbox** en el panel de comercio de IZIPAY: `IZIPAY_MERCHANT_CODE`, `IZIPAY_PUBLIC_KEY` (usada en el frontend para inicializar el checkout embebido) y `IZIPAY_PRIVATE_KEY` (solo backend, nunca debe llegar al navegador).
+2. Copiar `backend/.env.example` a `backend/.env` y completar esas tres variables, más `IZIPAY_MODE=sandbox`.
+3. Poner `IZIPAY_SIMULATE=false` en `.env` — esto hace que `backend/izipay.js` lance un error explícito en vez de simular, como recordatorio de que falta reemplazar el cuerpo de las funciones.
+4. En `backend/izipay.js`, reemplazar `createPaymentToken()` para llamar de verdad a la API REST de IZIPAY (`POST /api-payment/V4/Charge/CreatePayment`), firmando la petición con `IZIPAY_PRIVATE_KEY` en el header `Authorization` (Basic Auth). La forma de la respuesta que devuelve la función (`{ formToken, merchantCode }`) debería mantenerse igual para no tener que tocar el resto del backend.
+5. En el frontend, instalar el SDK oficial de IZIPAY (`krypton-client` / `lyra-collect`) y usar el `formToken` real para inicializar el checkout embebido dentro de `IzipayCheckoutModal.jsx`, en vez de los botones de "Simular Pago Exitoso/Rechazado".
+6. Implementar de verdad `POST /api/payments/izipay/webhook` en `backend/index.js`: verificar la firma del payload (IZIPAY firma sus notificaciones con la clave privada) antes de confiar en el resultado, y actualizar `paymentStatus` desde ahí — en producción, la confirmación del pago debe venir de este webhook asíncrono, no de lo que el navegador del cliente le diga al backend.
+7. Probar con las tarjetas de prueba que provee IZIPAY para sandbox (aprobación y rechazo), verificando que `paymentStatus` y el estado que se ve en el tracking del cliente queden en sincronía.
+8. **Pasar a producción**: cambiar `IZIPAY_MODE=production`, reemplazar las tres credenciales por las de producción, y actualizar el endpoint de la API si IZIPAY usa una URL distinta para producción vs. sandbox. La lógica del backend no debería requerir más cambios.
+
+---
+
 ## 📄 Licencia
 
 Este proyecto es propietario de URBSEND. Todos los derechos reservados.
